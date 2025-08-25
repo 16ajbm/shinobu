@@ -3796,6 +3796,7 @@ name = "shinobu"
 version = "0.1.0"
 dependencies = [
  "dioxus",
+ "svg",
 ]
 
 [[package]]
@@ -3964,6 +3965,12 @@ dependencies = [
  "proc-macro2",
  "quote",
 ]
+
+[[package]]
+name = "svg"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94afda9cd163c04f6bee8b4bf2501c91548deae308373c436f36aeff3cf3c4a3"
 
 [[package]]
 name = "syn"
