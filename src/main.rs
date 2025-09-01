@@ -3,6 +3,7 @@
 use dioxus::prelude::*;
 
 mod generator;
+pub mod image_processor;
 
 use crate::generator::{Generator, Plate, PlateConfig};
 

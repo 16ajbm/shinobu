@@ -5,16 +5,16 @@ use self::svg_painter::SvgPainter;
 const COLOURS_PER_PALETTE: usize = 6;
 
 // Hexadecimal color representation
-type Colour = String;
+type HexColour = String;
 
 // Dots are the individual coloured elements that make up a plate. Although they are called "dots",
 // they can come in a variety of shapes.
 #[derive(Debug, Clone)]
-struct Dot {
+pub struct Dot {
     x: u32,
     y: u32,
     size: u32,
-    color: Colour,
+    color: HexColour,
     shape: String,
 }
 
@@ -40,7 +40,7 @@ impl Plate {
                     x,
                     y,
                     size: config.dot_size,
-                    color: config.foreground.colors[0].clone(),
+                    color: config.primary.colors[0].clone(),
                     shape: "circle".to_string(),
                 };
                 dots.push(dot);
@@ -55,8 +55,9 @@ pub struct PlateConfig {
     pub dot_size: u32,
     pub width: u32,
     pub height: u32,
-    pub foreground: Palette,
-    pub background: Palette,
+    pub primary: Palette,
+    pub secondary: Palette,
+    pub background: Option<HexColour>,
     pub density: u32,
 }
 
@@ -66,8 +67,9 @@ impl PlateConfig {
             dot_size,
             width,
             height,
-            foreground: Palette::new("#ffffff".to_string()),
-            background: Palette::default(),
+            primary: Palette::new("#ffffff".to_string()),
+            secondary: Palette::default(),
+            background: None,
             density,
         }
     }
@@ -77,11 +79,11 @@ impl PlateConfig {
 // may be needed in the future.
 #[derive(Debug, Clone)]
 pub struct Palette {
-    colors: [Colour; COLOURS_PER_PALETTE],
+    colors: [HexColour; COLOURS_PER_PALETTE],
 }
 
 impl Palette {
-    fn new(colour: Colour) -> Self {
+    fn new(colour: HexColour) -> Self {
         Self {
             colors: std::array::from_fn(|_| colour.clone()),
         }
