@@ -141,6 +141,15 @@ impl ImageProcessor {
     pub fn new(adapter: Box<dyn ImageProcessorTrait>) -> Self {
         Self { adapter }
     }
+
+    pub fn gaussian_blur(
+        &self,
+        buffer: &ImageBuffer<u8>,
+        kernel_size: usize,
+        std_dev: f32,
+    ) -> ImageBuffer<u8> {
+        self.adapter.gaussian_blur(buffer, kernel_size, std_dev)
+    }
 }
 
 pub trait ImageProcessorTrait {
@@ -148,7 +157,7 @@ pub trait ImageProcessorTrait {
         &self,
         image: &GrayScaleBuffer,
         kernel_size: usize,
-        std_dev: u8,
+        std_dev: f32,
     ) -> GrayScaleBuffer;
     fn compute_gradient(&self, image: &GrayScaleBuffer) -> GrayScaleBuffer;
     fn non_maximum_suppression(&self, image: &GrayScaleBuffer) -> GrayScaleBuffer;
@@ -164,11 +173,10 @@ impl ImageProcessorTrait for CrateImageProcessor {
         &self,
         image: &GrayScaleBuffer,
         kernel_size: usize,
-        std_dev: u8,
+        std_dev: f32,
     ) -> GrayScaleBuffer {
-        let kernel = Kernel::gaussian(kernel_size, std_dev as f32);
-
-        return kernel.convolve(image);
+        let kernel = Kernel::gaussian(kernel_size, std_dev);
+        kernel.convolve(image)
     }
 
     fn compute_gradient(&self, image: &GrayScaleBuffer) -> GrayScaleBuffer {

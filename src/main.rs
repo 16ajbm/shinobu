@@ -2,6 +2,8 @@
 // need dioxus
 use dioxus::prelude::*;
 
+use image::{open, GrayImage};
+
 mod generator;
 pub mod image_processor;
 
@@ -19,21 +21,36 @@ fn main() {
 /// Components should be annotated with `#[component]` to support props, better error messages, and autocomplete
 #[component]
 fn App() -> Element {
-    let width: u32 = 600;
-    let height: u32 = 600;
-    let density: u32 = 10;
-    let dot_size: u32 = 2;
+    // Plate code
+    // let width: u32 = 600;
+    // let height: u32 = 600;
+    // let density: u32 = 10;
+    // let dot_size: u32 = 2;
 
-    let plate_config = PlateConfig::new(width, height, density, dot_size);
+    // let plate_config = PlateConfig::new(width, height, density, dot_size);
 
-    let plate = Plate::new(plate_config);
-    let generator = Generator::new();
+    // let plate = Plate::new(plate_config);
+    // let generator = Generator::new();
 
-    // let generated_plate = generator.paint(&mut plate.clone());
+    // // let generated_plate = generator.paint(&mut plate.clone());
 
-    let SVG: String = generator.paint(plate);
+    // let SVG: String = generator.paint(plate);
+
+    // rsx! {
+    //     img { src: SVG.as_str() }
+    // }
+
+    let gray_image: GrayImage = image::open("guassian-test.png")?.to_luma8();
+    let buffer = image_processor::ImageBuffer::from(&gray_image);
+
+    let processed_image =
+        image_processor::ImageProcessor::new(Box::new(image_processor::CrateImageProcessor))
+            .gaussian_blur(&buffer, 3, 4.0);Z
+
+    let out_gray: GrayImage = (&processed_image).into();
+    out_gray.save("blurred.png")?;
 
     rsx! {
-        img { src: SVG.as_str() }
+        img { src: "blurred.png" }
     }
 }
