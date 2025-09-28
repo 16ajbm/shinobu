@@ -5,7 +5,9 @@ use dioxus::prelude::*;
 use image::{open, GrayImage};
 
 mod generator;
-pub mod image_processor;
+mod image_processor;
+
+use crate::image_processor::{ImageBuffer, ImageProcessor, Kernel};
 
 use crate::generator::{Generator, Plate, PlateConfig};
 
@@ -45,7 +47,7 @@ fn App() -> Element {
 
     let processed_image =
         image_processor::ImageProcessor::new(Box::new(image_processor::CrateImageProcessor))
-            .gaussian_blur(&buffer, 3, 4.0);Z
+            .gaussian_blur(&buffer, 3, 4.0);
 
     let out_gray: GrayImage = (&processed_image).into();
     out_gray.save("blurred.png")?;
