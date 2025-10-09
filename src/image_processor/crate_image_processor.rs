@@ -58,15 +58,26 @@ impl ImageProcessorTrait for CrateImageProcessor {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_compute_gradient() {
-        let processor = CrateImageProcessor;
+    use proptest::prelude::*;
 
-        let data = vec![1u8; 9];
+    proptest! {
+        #[test]
+        fn test_compute_gradient_zero_property(a in 0..255u8) {
+            println!("Testing with pixel value: {}", a);
 
-        let image = GrayScaleBuffer::new(3, 3, data);
+            let processor = CrateImageProcessor;
 
-        let result = processor.compute_gradient(&image);
+            let image = GrayScaleBuffer::new(3, 3, vec![a; 9]);
 
+            println!("Input Image: {:?}", image.data);
+
+            let result = processor.compute_gradient(&image);
+
+            println!("Result Image: {:?}", result.data);
+
+            for &pixel in result.data.iter() {
+                prop_assert_eq!(pixel, 0);
+            }
+        }
     }
 }

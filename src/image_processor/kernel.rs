@@ -1,61 +1,34 @@
 use super::{ImageBuffer, SobelOrientation};
 
-pub struct Kernel {
-    pub size: usize,    // e.g., 3 for a 3x3 kernel
-    pub data: Vec<f32>, // flattened row-major order
+pub struct Kernel<T> {
+    pub size: usize,  // e.g., 3 for a 3x3 kernel
+    pub data: Vec<T>, // flattened row-major order
 }
 
-impl Kernel {
-    pub fn get(&self, x: usize, y: usize) -> f32 {
+impl<T> Kernel<T> {
+    pub fn new(size: usize, data: Vec<T>) -> Self {
+        assert_eq!(data.len(), size * size);
+        Self { size, data }
+    }
+
+    pub fn get(&self, x: usize, y: usize) -> T
+    where
+        T: Copy,
+    {
         self.data[y * self.size + x]
     }
-    pub fn iter(&self) -> impl Iterator<Item = (usize, usize, f32)> + '_ {
+
+    pub fn iter(&self) -> impl Iterator<Item = (usize, usize, T)> + '_
+    where
+        T: Copy,
+    {
         self.data
             .iter()
             .enumerate()
             .map(move |(i, &v)| (i % self.size, i / self.size, v))
     }
 
-    pub fn convolve<T: Copy + Into<f32> + From<u8>>(
-        &self,
-        image: &ImageBuffer<T>,
-    ) -> ImageBuffer<T> {
-        let mut convolved_data = vec![T::from(0); (image.width * image.height) as usize];
-
-        // Out-of-bounds pixels are ignored (zero-padding)
-        for y in 0..image.height as isize {
-            for x in 0..image.width as isize {
-                let mut sum = 0.0;
-                for ky in 0..self.size as isize {
-                    for kx in 0..self.size as isize {
-                        let ix = x + kx - (self.size as isize / 2);
-                        let iy = y + ky - (self.size as isize / 2);
-                        if ix >= 0
-                            && ix < image.width as isize
-                            && iy >= 0
-                            && iy < image.height as isize
-                        {
-                            let pixel = image.get_pixel(ix as u32, iy as u32);
-                            let kval = self.get(kx as usize, ky as usize);
-                            sum += pixel.into() * kval;
-                        }
-                    }
-                }
-
-                let value = sum.round().clamp(0.0, 255.0) as u8;
-                convolved_data[(y as usize) * (image.width as usize) + (x as usize)] =
-                    T::from(value);
-            }
-        }
-
-        ImageBuffer {
-            data: convolved_data,
-            width: image.width,
-            height: image.height,
-        }
-    }
-
-    pub fn gaussian(size: usize, std_dev: f32) -> Self {
+    pub fn gaussian(size: usize, std_dev: f32) -> Kernel<f32> {
         let mut data: Vec<f32> = Vec::with_capacity(size * size);
 
         for y in 0..size {
@@ -74,17 +47,17 @@ impl Kernel {
             *v /= sum;
         }
 
-        Self { size, data }
+        Kernel { size, data }
     }
 
-    pub fn sobel(orientation: SobelOrientation) -> Self {
+    pub fn sobel(orientation: SobelOrientation) -> Kernel<f32> {
         let (data, size) = match orientation {
             SobelOrientation::Horizontal => {
                 (vec![-1.0, 0.0, 1.0, -2.0, 0.0, 2.0, -1.0, 0.0, 1.0], 3)
             }
             SobelOrientation::Vertical => (vec![1.0, 2.0, 1.0, 0.0, 0.0, 0.0, -1.0, -2.0, -1.0], 3),
         };
-        Self { size, data }
+        Kernel { size, data }
     }
 }
 
@@ -93,6 +66,8 @@ mod tests {
     use super::*;
 
     use rand::prelude::*;
+
+    use proptest::prelude::*;
 
     const EPSILON: f32 = 1e-5;
 
@@ -115,7 +90,7 @@ mod tests {
             data: vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
         };
 
-        let result = identity_kernel.convolve(&image);
+        let result = image.convolve(&identity_kernel);
 
         assert_eq!(result.data, image.data);
     }
@@ -134,7 +109,7 @@ mod tests {
             data: vec![1.0 / 9.0; 9],
         };
 
-        let result = box_blur_kernel.convolve(&image);
+        let result = image.convolve(&box_blur_kernel);
 
         // Expected result calculated manually w/ zero-padding and clamped
         assert_eq!(result.data, [1, 2, 2, 3, 5, 4, 3, 4, 3]);

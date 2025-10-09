@@ -1,4 +1,4 @@
-use crate::image_processor::{ImageBuffer, GrayScaleBuffer};
+use crate::image_processor::{GrayScaleBuffer, ImageBuffer};
 
 pub struct ImageProcessor {
     pub adapter: Box<dyn ImageProcessorTrait>,
