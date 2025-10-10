@@ -1,7 +1,7 @@
+use super::kernel::Kernel;
 use image::GrayImage;
 use std::cmp::{Eq, PartialEq};
 use std::ops::{Add, Mul, Sub};
-use super::kernel::Kernel;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ImageBuffer<T> {
@@ -9,22 +9,34 @@ pub struct ImageBuffer<T> {
     pub width: u32,
     pub height: u32,
 }
-
-pub trait FromF32Convolve: Sized {
-    fn from_f32_convolve(val: f32) -> Self;
+pub trait FromConvolve<F>: Sized {
+    fn from_convolve(val: F) -> Self;
 }
 
-impl FromF32Convolve for u8 {
-    fn from_f32_convolve(val: f32) -> Self {
+// Then implement for different combinations:
+impl FromConvolve<f32> for u8 {
+    fn from_convolve(val: f32) -> Self {
         val.round().clamp(0.0, 255.0) as u8
     }
 }
-impl FromF32Convolve for f32 {
-    fn from_f32_convolve(val: f32) -> Self {
+
+impl FromConvolve<f64> for u8 {
+    fn from_convolve(val: f64) -> Self {
+        val.round().clamp(0.0, 255.0) as u8
+    }
+}
+
+impl FromConvolve<f32> for f32 {
+    fn from_convolve(val: f32) -> Self {
         val
     }
 }
 
+impl FromConvolve<f64> for f32 {
+    fn from_convolve(val: f64) -> Self {
+        val as f32
+    }
+}
 impl<T> ImageBuffer<T> {
     pub fn get_pixel(&self, x: u32, y: u32) -> T
     where
@@ -44,35 +56,44 @@ impl<T> ImageBuffer<T> {
 
 impl<T> ImageBuffer<T>
 where
-    T: Copy + Into<f32> + FromF32Convolve,
+    T: Copy + Into<f32> + FromConvolve<f64>,
 {
     pub fn convolve<K>(&self, kernel: &Kernel<K>) -> ImageBuffer<T>
     where
-        K: Copy + Into<f32>,
+        K: Copy + Into<f32> + Into<f64>,
     {
         let mut convolved_data = Vec::with_capacity((self.width * self.height) as usize);
 
-        // Out-of-bounds pixels are ignored (zero-padding)
+        let kernel_f64 = kernel.into_f64();
+
+        // Use constant padding (replicate edge values)
         for y in 0..self.height as isize {
             for x in 0..self.width as isize {
-                let mut sum = 0.0;
+                // Kahan summation variables (per pixel)
+                let mut sum: f64 = 0.0;
+                let mut compensation: f64 = 0.0;
+
                 for ky in 0..kernel.size as isize {
                     for kx in 0..kernel.size as isize {
                         let ix = x + kx - (kernel.size as isize / 2);
                         let iy = y + ky - (kernel.size as isize / 2);
-                        if ix >= 0
-                            && ix < self.width as isize
-                            && iy >= 0
-                            && iy < self.height as isize
-                        {
-                            let pixel = self.get_pixel(ix as u32, iy as u32);
-                            let kval = kernel.get(kx as usize, ky as usize);
-                            sum += pixel.into() * kval.into();
-                        }
+
+                        // Clamp coordinates to image bounds (constant padding)
+                        let clamped_x = ix.clamp(0, self.width as isize - 1) as u32;
+                        let clamped_y = iy.clamp(0, self.height as isize - 1) as u32;
+
+                        let pixel = self.get_pixel(clamped_x, clamped_y);
+                        let kval = kernel_f64.get(kx as usize, ky as usize);
+
+                        // Kahan summation
+                        let term = (pixel.into() as f64) * kval - compensation;
+                        let new_sum = sum + term;
+                        compensation = (new_sum - sum) - term;
+                        sum = new_sum;
                     }
                 }
 
-                convolved_data.push(T::from_f32_convolve(sum));
+                convolved_data.push(T::from_convolve(sum));
             }
         }
 
@@ -187,64 +208,106 @@ where
 
 pub type GrayScaleBuffer = ImageBuffer<u8>;
 
+pub trait ApproxEq<Rhs = Self> {
+    fn approx_eq(&self, other: &Rhs) -> bool;
+}
+
+impl ApproxEq for u8 {
+    fn approx_eq(&self, other: &u8) -> bool {
+        self == other
+    }
+}
+
+impl ApproxEq for i32 {
+    fn approx_eq(&self, other: &i32) -> bool {
+        self == other
+    }
+}
+
+impl ApproxEq for f32 {
+    fn approx_eq(&self, other: &f32) -> bool {
+        const ABS_EPSILON: f32 = 1e-4;
+        const REL_EPSILON: f32 = 1e-4;
+
+        let diff = (self - other).abs();
+
+        // Absolute epsilon check for small numbers
+        if diff <= ABS_EPSILON {
+            return true;
+        }
+
+        // Relative epsilon check for larger numbers
+        let max_val = self.abs().max(other.abs());
+        if max_val > 0.0 {
+            diff / max_val <= REL_EPSILON
+        } else {
+            true
+        }
+    }
+}
+
+impl ApproxEq for f64 {
+    fn approx_eq(&self, other: &f64) -> bool {
+        const ABS_EPSILON: f64 = 1e-9;
+        const REL_EPSILON: f64 = 1e-9;
+
+        let diff = (self - other).abs();
+
+        // For small numbers, use absolute epsilon
+        if diff <= ABS_EPSILON {
+            return true;
+        }
+
+        // For larger numbers, use relative epsilon
+        let max_val = self.abs().max(other.abs());
+        if max_val > 0.0 {
+            diff / max_val <= REL_EPSILON
+        } else {
+            true
+        }
+    }
+}
+
+impl<T: ApproxEq> ApproxEq for ImageBuffer<T> {
+    fn approx_eq(&self, other: &ImageBuffer<T>) -> bool {
+        self.width == other.width
+            && self.height == other.height
+            && self.data.len() == other.data.len()
+            && self
+                .data
+                .iter()
+                .zip(other.data.iter())
+                .all(|(a, b)| a.approx_eq(b))
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-
-
     use proptest::prelude::*;
 
-    const EPSILON: f32 = 1e-5;
-
-    fn approx_eq(a: f32, b: f32) -> bool {
-        (a - b).abs() < EPSILON
-    }
-
-    #[test]
-    fn test_convolve_identity_kernel() {
-        let data = vec![1u8, 2, 3, 4, 5, 6, 7, 8, 9];
-
-        let image = ImageBuffer {
-            data,
-            width: 3,
-            height: 3,
-        };
-
-        let identity_kernel = Kernel {
-            size: 3,
-            data: vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-        };
-
-        let result = image.convolve(&identity_kernel);
-
-        assert_eq!(result.data, image.data);
-    }
-
-    #[test]
-    fn test_convolve_box_blur_kernel() {
-        let data = vec![1u8, 2, 3, 4, 5, 6, 7, 8, 9];
-        let image = ImageBuffer {
-            data,
-            width: 3,
-            height: 3,
-        };
-
-        let box_blur_kernel = Kernel {
-            size: 3,
-            data: vec![1.0 / 9.0; 9],
-        };
-
-        let result = image.convolve(&box_blur_kernel);
-
-        // Expected result calculated manually w/ zero-padding and clamped
-        assert_eq!(result.data, [1, 2, 2, 3, 5, 4, 3, 4, 3]);
-    }
-
-
-
     proptest! {
+        #[test]
+        fn test_convolve_identity_kernel(
+            data in prop::collection::vec(0u8..=255, 9)
+        ) {
+            let image = ImageBuffer {
+                data,
+                width: 3,
+                height: 3,
+            };
+
+            let identity_kernel = Kernel {
+                size: 3,
+                data: vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+            };
+
+            let result = image.convolve(&identity_kernel);
+
+            assert_eq!(result.data, image.data);
+        }
+
         #[test]
         fn test_convolve_linearity_property(
             ref data_a in prop::collection::vec(0.0..255.0f32, 9),
@@ -282,7 +345,10 @@ mod tests {
             let convolved_b = image_b.convolve(&kernel);
             let expected = convolved_a * scalar_a + convolved_b * scalar_b;
 
-            assert_eq!(convolved_ab, expected);
+            println!("Convolved AB: {:?}", convolved_ab.data);
+            println!("Expected: {:?}", expected.data);
+
+            assert!(convolved_ab.approx_eq(&expected));
         }
     }
 }

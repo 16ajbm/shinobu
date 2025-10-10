@@ -9,16 +9,16 @@ impl ImageProcessorTrait for CrateImageProcessor {
         kernel_size: usize,
         std_dev: f32,
     ) -> GrayScaleBuffer {
-        let kernel = Kernel::gaussian(kernel_size, std_dev);
-        kernel.convolve(image)
+        let kernel = Kernel::<f32>::gaussian(kernel_size, std_dev);
+        image.convolve(&kernel)
     }
 
     fn compute_gradient(&self, image: &GrayScaleBuffer) -> GrayScaleBuffer {
-        let sobel_x = Kernel::sobel(SobelOrientation::Horizontal);
-        let sobel_y = Kernel::sobel(SobelOrientation::Vertical);
+        let sobel_x = Kernel::<f32>::sobel(SobelOrientation::Horizontal);
+        let sobel_y = Kernel::<f32>::sobel(SobelOrientation::Vertical);
 
-        let gradient_x = sobel_x.convolve(image);
-        let gradient_y = sobel_y.convolve(image);
+        let gradient_x = image.convolve(&sobel_x);
+        let gradient_y = image.convolve(&sobel_y);
 
         let mut gradient_image = vec![0u8; (image.width * image.height) as usize];
 
@@ -63,17 +63,13 @@ mod tests {
     proptest! {
         #[test]
         fn test_compute_gradient_zero_property(a in 0..255u8) {
-            println!("Testing with pixel value: {}", a);
 
             let processor = CrateImageProcessor;
 
             let image = GrayScaleBuffer::new(3, 3, vec![a; 9]);
 
-            println!("Input Image: {:?}", image.data);
 
             let result = processor.compute_gradient(&image);
-
-            println!("Result Image: {:?}", result.data);
 
             for &pixel in result.data.iter() {
                 prop_assert_eq!(pixel, 0);

@@ -1,0 +1,9 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc c2878e65ce968e3559b033dc40dea371fcde752e3603871d616d4bdf883a220c # shrinks to ref data_a = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], ref data_b = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 253.40332], scalar_a = 0.0, scalar_b = 153.85419, ref kernel_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.1855392]
+cc 6af91fc6e174956569ae5e52e5fc6a98147a90ff20e7d229633adb11f28e6146 # shrinks to ref data_a = [197.4551, 29.187223, 0.0, 0.0, 230.62062, 0.0, 0.0, 0.0, 0.0], ref data_b = [114.3073, 82.77555, 0.0, 91.71456, 40.183384, 0.0, 0.0, 0.0, 0.0], scalar_a = 45.042274, scalar_b = 157.67632, ref kernel_data = [0.0, 0.0, 0.0, 0.0, -1.1893079, -4.8264704, 0.0, 3.2389944, 3.255735]
+cc ef15343f1bcac6ac256a58ca51660f53b82803e9861250eeaf53cf57286f95e0 # shrinks to ref data_a = [142.82553, 115.128876, 56.41142, 174.54012, 26.096684, 152.35573, 28.242302, 132.97227, 183.90718], ref data_b = [191.40186, 63.165165, 116.88456, 222.4094, 142.77379, 242.5739, 68.37507, 35.81478, 81.75406], scalar_a = 215.37486, scalar_b = 236.19301, ref kernel_data = [-2.7542677, -2.4342043, -0.78570503, 2.8531976, 1.2717732, -3.4976666, 0.58784705, 2.401559, 4.129096]

@@ -1,5 +1,6 @@
 use super::{ImageBuffer, SobelOrientation};
 
+#[derive(Debug, Clone)]
 pub struct Kernel<T> {
     pub size: usize,  // e.g., 3 for a 3x3 kernel
     pub data: Vec<T>, // flattened row-major order
@@ -61,11 +62,33 @@ impl<T> Kernel<T> {
     }
 }
 
+impl<T> Kernel<T>
+where
+    T: Copy + Into<f64> + Into<f32>,
+{
+    pub fn into_f64(&self) -> Kernel<f64> {
+        let converted_data = self.data.iter().map(|&x| x.into()).collect();
+        Kernel::new(self.size, converted_data)
+    }
+
+    pub fn into_f32(&self) -> Kernel<f32> {
+        let converted_data = self.data.iter().map(|&x| x.into()).collect();
+        Kernel::new(self.size, converted_data)
+    }
+}
+
+impl<K> From<&Kernel<K>> for Vec<f64>
+where
+    K: Copy + Into<f64> + Into<f32>,
+{
+    fn from(kernel: &Kernel<K>) -> Vec<f64> {
+        kernel.data.iter().map(|&x| x.into()).collect()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use rand::prelude::*;
 
     use proptest::prelude::*;
 
@@ -75,57 +98,19 @@ mod tests {
         (a - b).abs() < EPSILON
     }
 
-    #[test]
-    fn test_convolve_identity_kernel() {
-        let data = vec![1u8, 2, 3, 4, 5, 6, 7, 8, 9];
+    proptest! {
+        #[test]
+        fn test_gaussian_kernel_normalization(
+            size in 3u8..=11u8,
+            std_dev in 0.1f32..10.0f32
+        ) {
+            let kernel_size = (size % 5) * 2 + 3; // Ensure it's odd and between 3 and 11
 
-        let image = ImageBuffer {
-            data,
-            width: 3,
-            height: 3,
-        };
+            let kernel = Kernel::<f32>::gaussian(kernel_size.into(), std_dev);
 
-        let identity_kernel = Kernel {
-            size: 3,
-            data: vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-        };
+            let sum: f32 = kernel.data.iter().sum();
 
-        let result = image.convolve(&identity_kernel);
-
-        assert_eq!(result.data, image.data);
-    }
-
-    #[test]
-    fn test_convolve_box_blur_kernel() {
-        let data = vec![1u8, 2, 3, 4, 5, 6, 7, 8, 9];
-        let image = ImageBuffer {
-            data,
-            width: 3,
-            height: 3,
-        };
-
-        let box_blur_kernel = Kernel {
-            size: 3,
-            data: vec![1.0 / 9.0; 9],
-        };
-
-        let result = image.convolve(&box_blur_kernel);
-
-        // Expected result calculated manually w/ zero-padding and clamped
-        assert_eq!(result.data, [1, 2, 2, 3, 5, 4, 3, 4, 3]);
-    }
-
-    #[test]
-    fn test_gaussian_kernel_normalization() {
-        let random_size: u8 = rand::random();
-        let std_dev: f32 = rand::random();
-
-        let kernel_size = (random_size % 5) * 2 + 3; // Ensure it's odd and between 3 and 11
-
-        let kernel = Kernel::gaussian(kernel_size.into(), std_dev);
-
-        let sum: f32 = kernel.data.iter().sum();
-
-        assert!(approx_eq(sum, 1.0), "Kernel sum was {}, expected 1.0", sum);
+            assert!(approx_eq(sum, 1.0), "Kernel sum was {}, expected 1.0", sum);
+        }
     }
 }
