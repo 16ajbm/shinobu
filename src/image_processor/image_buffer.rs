@@ -52,6 +52,10 @@ impl<T> ImageBuffer<T> {
             data,
         }
     }
+
+    pub fn set_pixel(&mut self, x: u32, y: u32, value: T) {
+        self.data[(y * self.width + x) as usize] = value;
+    }
 }
 
 impl<T> ImageBuffer<T>
@@ -207,6 +211,54 @@ where
 }
 
 pub type GrayScaleBuffer = ImageBuffer<u8>;
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct GradientData<T> {
+    pub magnitude: T,
+    pub x_component: T,
+    pub y_component: T,
+}
+
+impl<T> GradientData<T> {
+    pub fn new(magnitude: T, x_component: T, y_component: T) -> Self {
+        Self {
+            magnitude,
+            x_component,
+            y_component,
+        }
+    }
+}
+
+impl GradientData<f32> {
+    pub fn angle(&self) -> f32 {
+        self.y_component.atan2(self.x_component)
+    }
+
+    pub fn discretize_direction(&self) -> [(i32, i32); 2] {
+        let angle_rad = self.angle();
+
+        // Normalize angle to [0, 180) degrees for undirected edges
+        let angle_deg = (angle_rad.to_degrees() + 180.0) % 180.0;
+
+        let bin = (angle_deg / 45.0).floor() as i32;
+
+        match bin {
+            0 => [(-1, 0), (1, 0)],  // Horizontal: left, right
+            1 => [(-1, -1), (1, 1)], // Diagonal 45°: NW, SE
+            2 => [(0, -1), (0, 1)],  // Vertical: up, down
+            3 => [(-1, 1), (1, -1)], // Diagonal 135°: SW, NE
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl GradientData<f64> {
+    pub fn angle(&self) -> f64 {
+        self.y_component.atan2(self.x_component)
+    }
+}
+
+pub type GradientBuffer = ImageBuffer<GradientData<f32>>;
 
 pub trait ApproxEq<Rhs = Self> {
     fn approx_eq(&self, other: &Rhs) -> bool;
