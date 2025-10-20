@@ -1,8 +1,9 @@
-use crate::image_processor::{GrayScaleBuffer, ImageProcessorTrait, Kernel, SobelOrientation};
+use crate::image_processor::{GrayScaleBuffer, ImageProcessorTrait, Kernel, SobelOrientation, NON_EDGE, WEAK_EDGE, STRONG_EDGE};
 
 use crate::image_processor::image_buffer::{GradientBuffer, GradientData};
 
 pub struct CrateImageProcessor;
+
 
 impl ImageProcessorTrait for CrateImageProcessor {
     fn gaussian_blur(
@@ -96,8 +97,16 @@ impl ImageProcessorTrait for CrateImageProcessor {
     }
 
     fn double_threshold(&self, image: &GrayScaleBuffer, low: f32, high: f32) -> GrayScaleBuffer {
-        // Implement double threshold logic here
-        todo!()
+
+        image.data.iter().map(|&val| {
+            if (val as f32) >= high {
+                STRONG_EDGE
+            } else if (val as f32) >= low {
+                WEAK_EDGE
+            } else {
+                NON_EDGE
+            }
+        }).collect();
     }
 
     fn edge_extension(&self, image: &GrayScaleBuffer) -> GrayScaleBuffer {

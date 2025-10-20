@@ -8,6 +8,6 @@ pub mod sobel_orientation;
 pub use clampable::Clampable;
 pub use crate_image_processor::CrateImageProcessor;
 pub use image_buffer::{GrayScaleBuffer, ImageBuffer};
-pub use image_processor::{ImageProcessor, ImageProcessorTrait};
+pub use image_processor::{ImageProcessor, ImageProcessorTrait, NON_EDGE, WEAK_EDGE, STRONG_EDGE};
 pub use kernel::Kernel;
 pub use sobel_orientation::SobelOrientation;

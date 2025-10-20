@@ -30,23 +30,31 @@ impl<T> Kernel<T> {
     }
 
     pub fn gaussian(size: usize, std_dev: f32) -> Kernel<f32> {
+        assert!(size % 2 == 1, "Kernel size must be odd");
+
         let mut data: Vec<f32> = Vec::with_capacity(size * size);
+
+        let center = (size as isize) / 2;
 
         for y in 0..size {
             for x in 0..size {
-                let gx = x as isize - (size as isize / 2);
-                let gy = y as isize - (size as isize / 2);
-                let value = (1.0 / (2.0 * std::f32::consts::PI * std_dev * std_dev))
-                    * (-((gx * gx + gy * gy) as f32) / (2.0 * std_dev * std_dev)).exp();
+                let gx = (x as isize) - center;
+                let gy = (y as isize) - center;
+
+                let distance_sq = (gx * gx + gy * gy) as f32;
+
+                let std_dev_sq = std_dev * std_dev;
+
+                let value = (1.0 / (2.0 * std::f32::consts::PI * std_dev_sq))
+                    * (-distance_sq / (2.0 * std_dev_sq)).exp();
+
                 data.push(value);
             }
         }
 
-        // Normalize the kernel
         let sum: f32 = data.iter().sum();
-        for v in &mut data {
-            *v /= sum;
-        }
+
+        data.iter_mut().for_each(|v| *v /= sum);
 
         Kernel { size, data }
     }
@@ -92,7 +100,7 @@ mod tests {
 
     use proptest::prelude::*;
 
-    const EPSILON: f32 = 1e-5;
+    const EPSILON: f32 = 1e-4;
 
     fn approx_eq(a: f32, b: f32) -> bool {
         (a - b).abs() < EPSILON

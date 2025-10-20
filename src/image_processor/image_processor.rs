@@ -1,5 +1,10 @@
 use crate::image_processor::{image_buffer::GradientBuffer, GrayScaleBuffer, ImageBuffer};
 
+// Edge classification constants - available to all implementations
+pub const NON_EDGE: u8 = 0;
+pub const WEAK_EDGE: u8 = 127;
+pub const STRONG_EDGE: u8 = 255;
+
 pub struct ImageProcessor {
     pub adapter: Box<dyn ImageProcessorTrait>,
 }
