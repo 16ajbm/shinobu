@@ -38,6 +38,13 @@ impl FromConvolve<f64> for f32 {
         val as f32
     }
 }
+
+pub enum GradientComponent {
+    Magnitude,
+    XComponent,
+    YComponent,
+}
+
 impl<T> ImageBuffer<T> {
     pub fn get_pixel(&self, x: u32, y: u32) -> T
     where
@@ -87,6 +94,32 @@ impl<T> ImageBuffer<T> {
             self.width,
             self.height,
             self.data.iter().map(|&v| v.into()).collect(),
+        )
+        .ok_or("Failed to create GrayImage from buffer")?;
+
+        gray_image.save(path)?;
+
+        Ok(())
+    }
+}
+
+impl ImageBuffer<GradientData<f32>> {
+    pub fn to_file_with_component(
+        &self,
+        path: &Path,
+        component: GradientComponent,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let gray_image = GrayImage::from_raw(
+            self.width,
+            self.height,
+            self.data
+                .iter()
+                .map(|&v| match component {
+                    GradientComponent::Magnitude => v.magnitude as u8,
+                    GradientComponent::XComponent => v.x_component as u8,
+                    GradientComponent::YComponent => v.y_component as u8,
+                })
+                .collect(),
         )
         .ok_or("Failed to create GrayImage from buffer")?;
 

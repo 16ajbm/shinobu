@@ -1,9 +1,18 @@
-use crate::image_processor::{GrayScaleBuffer, ImageProcessorTrait, Kernel, SobelOrientation, NON_EDGE, WEAK_EDGE, STRONG_EDGE};
+use crate::image_processor::{
+    GrayScaleBuffer, ImageProcessorTrait, Kernel, SobelOrientation, NON_EDGE, STRONG_EDGE,
+    WEAK_EDGE,
+};
 
-use crate::image_processor::image_buffer::{GradientBuffer, GradientData};
+use crate::image_processor::image_buffer::{GradientBuffer, GradientComponent, GradientData};
+
+use std::collections::VecDeque;
+
+const STD_DEV: f32 = 3.0;
+const KERNEL_SIZE: usize = 5;
+const LOW_THRESHOLD: f32 = 0.05 * 255.0;
+const HIGH_THRESHOLD: f32 = 0.50 * 255.0;
 
 pub struct CrateImageProcessor;
-
 
 impl ImageProcessorTrait for CrateImageProcessor {
     fn gaussian_blur(
@@ -97,26 +106,82 @@ impl ImageProcessorTrait for CrateImageProcessor {
     }
 
     fn double_threshold(&self, image: &GrayScaleBuffer, low: f32, high: f32) -> GrayScaleBuffer {
+        let data: Vec<u8> = image
+            .data
+            .iter()
+            .map(|&val| {
+                if (val as f32) >= high {
+                    STRONG_EDGE
+                } else if (val as f32) >= low {
+                    WEAK_EDGE
+                } else {
+                    NON_EDGE
+                }
+            })
+            .collect();
 
-        image.data.iter().map(|&val| {
-            if (val as f32) >= high {
-                STRONG_EDGE
-            } else if (val as f32) >= low {
-                WEAK_EDGE
-            } else {
-                NON_EDGE
-            }
-        }).collect();
+        GrayScaleBuffer::new(image.width, image.height, data)
     }
 
     fn edge_extension(&self, image: &GrayScaleBuffer) -> GrayScaleBuffer {
-        // Implement edge extension logic here
-        todo!()
+        let mut data = image.data.clone();
+        let mut queue = VecDeque::new();
+
+        for y in 0..image.height {
+            for x in 0..image.width {
+                let pixel_value = image.get_pixel(x, y);
+                if pixel_value == STRONG_EDGE || pixel_value == WEAK_EDGE {
+                    queue.push_back((x, y));
+                }
+            }
+        }
+
+        while let Some((x, y)) = queue.pop_front() {
+            for dy in -1i32..=1 {
+                for dx in -1i32..=1 {
+                    if dx == 0 && dy == 0 {
+                        continue;
+                    }
+
+                    let neighbor_x = x.saturating_add_signed(dx) as i32;
+                    let neighbor_y = y.saturating_add_signed(dy) as i32;
+
+                    // Check bounds using signed arithmetic
+                    if neighbor_x < image.width as i32 && neighbor_y < image.height as i32 {
+                        let neighbor_x = neighbor_x as u32;
+                        let neighbor_y = neighbor_y as u32;
+                        let index =
+                            neighbor_y as usize * image.width as usize + neighbor_x as usize;
+
+                        // If neighbor is a potential edge, promote it to strong edge
+                        if data[index] == WEAK_EDGE {
+                            data[index] = STRONG_EDGE;
+                            queue.push_back((neighbor_x, neighbor_y));
+                        }
+                    }
+                }
+            }
+        }
+
+        // Any remaining weak edges that weren't connected to strong edges are discarded
+        for pixel in data.iter_mut() {
+            if *pixel == WEAK_EDGE {
+                *pixel = NON_EDGE;
+            }
+        }
+
+        GrayScaleBuffer::new(image.width, image.height, data)
     }
 
     fn canny_edge_detection(&self, image: &GrayScaleBuffer) -> GrayScaleBuffer {
-        // Compose the steps here
-        todo!()
+        let blurred = self.gaussian_blur(image, KERNEL_SIZE, STD_DEV);
+        let gradient_buffer = self.compute_gradient(&blurred);
+        let non_max_suppressed = self.non_maximum_suppression(&gradient_buffer);
+        let double_thresholded =
+            self.double_threshold(&non_max_suppressed, LOW_THRESHOLD, HIGH_THRESHOLD);
+        let edge_extended = self.edge_extension(&double_thresholded);
+
+        return edge_extended;
     }
 }
 
@@ -137,6 +202,29 @@ mod tests {
 
             for &pixel in result.data.iter() {
                 prop_assert_eq!(pixel.magnitude, 0.0);
+            }
+        }
+
+        #[test]
+        fn test_double_threshold_classification (
+            value in 0..255u8,
+            low in 0..254u8,
+            high in 1..255u8,
+        ) {
+            prop_assume!(low < high);
+
+            let processor = CrateImageProcessor;
+            let image = GrayScaleBuffer::new(1, 1, vec![value]);
+
+            let result = processor.double_threshold(&image, low as f32, high as f32);
+            let classified_value = result.get_pixel(0, 0);
+
+            if value  >= high {
+                prop_assert_eq!(classified_value, STRONG_EDGE);
+            } else if value >= low {
+                prop_assert_eq!(classified_value, WEAK_EDGE);
+            } else {
+                prop_assert_eq!(classified_value, NON_EDGE);
             }
         }
     }
