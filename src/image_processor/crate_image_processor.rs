@@ -72,16 +72,16 @@ impl ImageProcessorTrait for CrateImageProcessor {
                 let mut is_local_maximum = true;
 
                 for (dx, dy) in neighbours {
-                    let neighbor_x = x as i32 + dx;
-                    let neighbor_y = y as i32 + dy;
+                    let neighbour_x = x as i32 + dx;
+                    let neighbour_y = y as i32 + dy;
 
-                    if neighbor_x >= 0
-                        && neighbor_x < gradient_buffer.width as i32
-                        && neighbor_y >= 0
-                        && neighbor_y < gradient_buffer.height as i32
+                    if neighbour_x >= 0
+                        && neighbour_x < gradient_buffer.width as i32
+                        && neighbour_y >= 0
+                        && neighbour_y < gradient_buffer.height as i32
                     {
                         let neighbour_gradient =
-                            gradient_buffer.get_pixel(neighbor_x as u32, neighbor_y as u32);
+                            gradient_buffer.get_pixel(neighbour_x as u32, neighbour_y as u32);
 
                         if neighbour_gradient.magnitude > current_gradient.magnitude {
                             is_local_maximum = false;
@@ -143,20 +143,24 @@ impl ImageProcessorTrait for CrateImageProcessor {
                         continue;
                     }
 
-                    let neighbor_x = x.saturating_add_signed(dx) as i32;
-                    let neighbor_y = y.saturating_add_signed(dy) as i32;
+                    let neighbour_x = x.saturating_add_signed(dx) as i32;
+                    let neighbour_y = y.saturating_add_signed(dy) as i32;
 
                     // Check bounds using signed arithmetic
-                    if neighbor_x < image.width as i32 && neighbor_y < image.height as i32 {
-                        let neighbor_x = neighbor_x as u32;
-                        let neighbor_y = neighbor_y as u32;
+                    if neighbour_x >= 0
+                        && neighbour_x < image.width as i32
+                        && neighbour_y >= 0
+                        && neighbour_y < image.height as i32
+                    {
+                        let neighbour_x = neighbour_x as u32;
+                        let neighbour_y = neighbour_y as u32;
                         let index =
-                            neighbor_y as usize * image.width as usize + neighbor_x as usize;
+                            neighbour_y as usize * image.width as usize + neighbour_x as usize;
 
-                        // If neighbor is a potential edge, promote it to strong edge
+                        // If neighbour is a potential edge, promote it to strong edge
                         if data[index] == WEAK_EDGE {
                             data[index] = STRONG_EDGE;
-                            queue.push_back((neighbor_x, neighbor_y));
+                            queue.push_back((neighbour_x, neighbour_y));
                         }
                     }
                 }
@@ -185,20 +189,32 @@ impl ImageProcessorTrait for CrateImageProcessor {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
-
+    use crate::image_processor::image_buffer::ApproxEq;
+    use crate::image_processor::test_utils::TestDataStrategy;
     use proptest::prelude::*;
 
     proptest! {
         #[test]
-        fn test_compute_gradient_zero_property(a in 0..255u8) {
-
+        fn test_compute_gradient_magnitude_relationnship(buffer in GrayScaleBuffer::random()) {
             let processor = CrateImageProcessor;
+            let gradient_buffer = processor.compute_gradient(&buffer);
 
-            let image = GrayScaleBuffer::new(3, 3, vec![a; 9]);
+            for &pixel in gradient_buffer.data.iter() {
+                prop_assert!(pixel.magnitude <= pixel.x_component.abs() + pixel.y_component.abs());
 
-            let result = processor.compute_gradient(&image);
+                let expected_magnitude = (pixel.x_component.powi(2) + pixel.y_component.powi(2)).sqrt();
+                prop_assert!(pixel.magnitude.approx_eq(&expected_magnitude));
+            }
+
+        }
+
+        #[test]
+        fn test_compute_gradient_zero_property(buffer in GrayScaleBuffer::uniform()) {
+            let processor = CrateImageProcessor;
+            let result = processor.compute_gradient(&buffer);
 
             for &pixel in result.data.iter() {
                 prop_assert_eq!(pixel.magnitude, 0.0);
@@ -206,26 +222,87 @@ mod tests {
         }
 
         #[test]
-        fn test_double_threshold_classification (
-            value in 0..255u8,
+        fn test_double_threshold_classification(
+            buffer in GrayScaleBuffer::random(),
             low in 0..254u8,
             high in 1..255u8,
         ) {
             prop_assume!(low < high);
 
             let processor = CrateImageProcessor;
-            let image = GrayScaleBuffer::new(1, 1, vec![value]);
+            let result = processor.double_threshold(&buffer, low as f32, high as f32);
 
-            let result = processor.double_threshold(&image, low as f32, high as f32);
-            let classified_value = result.get_pixel(0, 0);
-
-            if value  >= high {
-                prop_assert_eq!(classified_value, STRONG_EDGE);
-            } else if value >= low {
-                prop_assert_eq!(classified_value, WEAK_EDGE);
-            } else {
-                prop_assert_eq!(classified_value, NON_EDGE);
+            for (input_val, &output_val) in buffer.data.iter().zip(result.data.iter()) {
+                if *input_val >= high {
+                    prop_assert_eq!(output_val, STRONG_EDGE);
+                } else if *input_val >= low {
+                    prop_assert_eq!(output_val, WEAK_EDGE);
+                } else {
+                    prop_assert_eq!(output_val, NON_EDGE);
+                }
             }
+        }
+
+        #[test]
+        fn test_edge_extension_eliminates_weak_edges(buffer in GrayScaleBuffer::random()) {
+            let processor = CrateImageProcessor;
+            let result = processor.edge_extension(&buffer);
+
+            prop_assert!(result.data.iter().all(|&p| p != WEAK_EDGE));
+        }
+
+        #[test]
+        fn test_edge_extension_preserves_strong_edges(buffer in GrayScaleBuffer::random()) {
+            let processor = CrateImageProcessor;
+            let result = processor.edge_extension(&buffer);
+
+            for (input_val, &output_val) in buffer.data.iter().zip(result.data.iter()) {
+                if *input_val == STRONG_EDGE {
+                    prop_assert_eq!(output_val, STRONG_EDGE);
+                }
+            }
+        }
+
+        #[test]
+        fn test_edge_extension_non_increasing(buffer in GrayScaleBuffer::random()) {
+            let processor = CrateImageProcessor;
+
+            let input_edges = buffer.data.iter().filter(|&&p| p == STRONG_EDGE || p == WEAK_EDGE).count();
+            let result = processor.edge_extension(&buffer);
+            let output_edges = result.data.iter().filter(|&&p| p == STRONG_EDGE).count();
+
+            prop_assert!(output_edges <= input_edges);
+        }
+
+        #[test]
+        fn test_non_maximum_suppression_thinning(buffer in GrayScaleBuffer::random()) {
+            let processor = CrateImageProcessor;
+            let gradient_buffer = processor.compute_gradient(&buffer);
+            let suppressed = processor.non_maximum_suppression(&gradient_buffer);
+
+            let gradient_as_u8: Vec<u8> = gradient_buffer.data.iter()
+                .map(|g| g.magnitude.clamp(0.0, 255.0) as u8)
+                .collect();
+
+            let input_edge_pixels = gradient_as_u8.iter().filter(|&&p| p > 0).count();
+            let output_edge_pixels = suppressed.data.iter().filter(|&&p| p > 0).count();
+
+            prop_assert!(
+                output_edge_pixels <= input_edge_pixels,
+                "Non-maximum suppression increased edge count: {} input -> {} output",
+                input_edge_pixels,
+                output_edge_pixels
+            );
+        }
+
+        #[test]
+        fn test_non_maximum_suppression_zero_gradient(buffer in GrayScaleBuffer::uniform())
+        {
+            let processor = CrateImageProcessor;
+            let gradient_buffer = processor.compute_gradient(&buffer);
+            let suppressed = processor.non_maximum_suppression(&gradient_buffer);
+
+            prop_assert!(suppressed.data.iter().all(|&p| p == 0));
         }
     }
 }
