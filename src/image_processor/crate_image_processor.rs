@@ -1,6 +1,6 @@
 use crate::image_processor::{
-    GrayScaleBuffer, ImageProcessorTrait, Kernel, SobelOrientation, NON_EDGE, STRONG_EDGE,
-    WEAK_EDGE,
+    GrayScaleBuffer, ImageBuffer, ImageProcessorTrait, Kernel, SobelOrientation, NON_EDGE,
+    STRONG_EDGE, WEAK_EDGE,
 };
 
 use crate::image_processor::image_buffer::{GradientBuffer, GradientComponent, GradientData};
@@ -29,8 +29,10 @@ impl ImageProcessorTrait for CrateImageProcessor {
         let sobel_x = Kernel::<f32>::sobel(SobelOrientation::Horizontal);
         let sobel_y = Kernel::<f32>::sobel(SobelOrientation::Vertical);
 
-        let gradient_x = image.convolve(&sobel_x);
-        let gradient_y = image.convolve(&sobel_y);
+        let f32_image: ImageBuffer<f32> = image.convert();
+
+        let gradient_x = f32_image.convolve(&sobel_x);
+        let gradient_y = f32_image.convolve(&sobel_y);
 
         let mut gradient_buffer = GradientBuffer::new(
             image.width,

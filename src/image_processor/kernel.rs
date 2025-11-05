@@ -1,4 +1,4 @@
-use super::{ImageBuffer, SobelOrientation};
+use super::SobelOrientation;
 
 #[derive(Debug, Clone)]
 pub struct Kernel<T> {
@@ -72,6 +72,24 @@ impl<T> Kernel<T> {
 
 impl<T> Kernel<T>
 where
+    T: Copy + std::ops::Mul<Output = T> + std::iter::Sum,
+{
+    pub fn dot_product(&self, other: &Kernel<T>) -> T {
+        assert_eq!(
+            self.size, other.size,
+            "Kernels must be of the same size for dot product"
+        );
+
+        self.data
+            .iter()
+            .zip(other.data.iter())
+            .map(|(&a, &b)| a * b)
+            .sum()
+    }
+}
+
+impl<T> Kernel<T>
+where
     T: Copy + Into<f64> + Into<f32>,
 {
     pub fn into_f64(&self) -> Kernel<f64> {
@@ -98,12 +116,29 @@ where
 mod tests {
     use super::*;
 
+    use crate::image_processor::image_buffer::{ApproxEq, GrayScaleBuffer, ImageBuffer};
+    use crate::image_processor::test_utils::TestDataStrategy;
+
     use proptest::prelude::*;
 
     const EPSILON: f32 = 1e-4;
 
     fn approx_eq(a: f32, b: f32) -> bool {
         (a - b).abs() < EPSILON
+    }
+
+    #[test]
+    fn test_sobel_kernel_orthogonality() {
+        let sobel_x = Kernel::<f32>::sobel(SobelOrientation::Horizontal);
+        let sobel_y = Kernel::<f32>::sobel(SobelOrientation::Vertical);
+
+        let dot_product: f32 = sobel_x.dot_product(&sobel_y);
+
+        assert!(
+            approx_eq(dot_product, 0.0),
+            "Dot product was {}, expected 0.0",
+            dot_product
+        );
     }
 
     proptest! {
@@ -119,6 +154,85 @@ mod tests {
             let sum: f32 = kernel.data.iter().sum();
 
             assert!(approx_eq(sum, 1.0), "Kernel sum was {}, expected 1.0", sum);
+        }
+
+        #[test]
+        fn test_sobel_horizontal_edge_response(horizontal_edge in GrayScaleBuffer::horizontal_edge()) {
+            let sobel_x = Kernel::<f32>::sobel(SobelOrientation::Horizontal);
+            let sobel_y = Kernel::<f32>::sobel(SobelOrientation::Vertical);
+
+            let f32_horizontal_edge: ImageBuffer<f32> = horizontal_edge.convert();
+
+            let gx_response = f32_horizontal_edge.convolve(&sobel_x);
+            let gy_response = f32_horizontal_edge.convolve(&sobel_y);
+
+            let gx_magnitude: f32 = gx_response.manhattan_norm() as f32;
+            let gy_magnitude: f32 = gy_response.manhattan_norm() as f32;
+
+            let total_gradient = gx_magnitude + gy_magnitude;
+            let threshold = horizontal_edge.gradient_threshold();
+
+            if total_gradient > threshold {
+                prop_assert!(
+                    gy_magnitude > gx_magnitude * 2.0,
+                    "Horizontal edge: Y gradient ({:.2}) should be > X gradient ({:.2})",
+                    gy_magnitude, gx_magnitude
+                );
+            }
+        }
+
+        #[test]
+        fn test_sobel_preserves_strong_edges( edge_data in prop_oneof![
+                GrayScaleBuffer::horizontal_edge().prop_map(|buf| (true, buf)),
+                GrayScaleBuffer::vertical_edge().prop_map(|buf| (false, buf))
+            ]) {
+            let (is_horizontal, edge_buffer) = edge_data;
+
+            let sobel = if is_horizontal {
+                Kernel::<f32>::sobel(SobelOrientation::Vertical)
+            } else {
+                Kernel::<f32>::sobel(SobelOrientation::Horizontal)
+            };
+
+            let f32_buffer: ImageBuffer<f32> = edge_buffer.convert();
+
+            let response = f32_buffer.convolve(&sobel);
+
+            let contrast = edge_buffer.contrast();
+            let magnitude = response.manhattan_norm();
+
+            if contrast > 50 {
+                prop_assert!(
+                    magnitude > 0.0,
+                    "Strong edge (contrast: {}) should produce non-zero gradient response (magnitude: {})",
+                    contrast, magnitude
+                );
+            }
+        }
+
+        #[test]
+        fn test_sobel_vertical_edge_response(vertical_edge in GrayScaleBuffer::vertical_edge()) {
+            let sobel_x = Kernel::<f32>::sobel(SobelOrientation::Horizontal);
+            let sobel_y = Kernel::<f32>::sobel(SobelOrientation::Vertical);
+
+            let f32_vertical_edge: ImageBuffer<f32> = vertical_edge.convert();
+
+            let gx_response = f32_vertical_edge.convolve(&sobel_x);
+            let gy_response = f32_vertical_edge.convolve(&sobel_y);
+
+            let gx_magnitude: f32 = gx_response.manhattan_norm() as f32;
+            let gy_magnitude: f32 = gy_response.manhattan_norm() as f32;
+
+            let total_gradient = gx_magnitude + gy_magnitude;
+            let threshold = vertical_edge.gradient_threshold();
+
+            if total_gradient > threshold {
+                prop_assert!(
+                    gx_magnitude > gy_magnitude * 2.0,
+                    "Vertical edge: X gradient ({:.2}) should be > Y gradient ({:.2})",
+                    gx_magnitude, gy_magnitude
+                );
+            }
         }
     }
 }

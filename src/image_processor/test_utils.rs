@@ -5,6 +5,8 @@ use proptest::prelude::*;
 pub trait TestDataStrategy<T> {
     fn uniform() -> BoxedStrategy<T>;
     fn random() -> BoxedStrategy<T>;
+    fn horizontal_edge() -> BoxedStrategy<T>;
+    fn vertical_edge() -> BoxedStrategy<T>;
 }
 
 impl TestDataStrategy<GrayScaleBuffer> for GrayScaleBuffer {
@@ -31,6 +33,40 @@ impl TestDataStrategy<GrayScaleBuffer> for GrayScaleBuffer {
                 )
             })
             .prop_map(|((width, height), data)| GrayScaleBuffer::new(width, height, data))
+            .boxed()
+    }
+
+    fn horizontal_edge() -> BoxedStrategy<GrayScaleBuffer> {
+        (0u8..=128, 127u8..=255, 4u32..=10, 4u32..=10, 1u32..10)
+            .prop_map(|(low, high, width, height, edge_offset)| {
+                let edge_row = 1 + (edge_offset % (height - 2));
+                let mut data = vec![low; (width * height) as usize];
+
+                for y in edge_row..height {
+                    for x in 0..width {
+                        data[(y * width + x) as usize] = high;
+                    }
+                }
+
+                GrayScaleBuffer::new(width, height, data)
+            })
+            .boxed()
+    }
+
+    fn vertical_edge() -> BoxedStrategy<GrayScaleBuffer> {
+        (0u8..=128, 127u8..=255, 4u32..=10, 4u32..=10, 1u32..10)
+            .prop_map(|(low, high, width, height, edge_offset)| {
+                let edge_col = 1 + (edge_offset % (width - 2));
+                let mut data = vec![low; (width * height) as usize];
+
+                for y in 0..height {
+                    for x in edge_col..width {
+                        data[(y * width + x) as usize] = high;
+                    }
+                }
+
+                GrayScaleBuffer::new(width, height, data)
+            })
             .boxed()
     }
 }

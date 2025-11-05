@@ -53,6 +53,20 @@ impl<T> ImageBuffer<T> {
         self.data[(y * self.width + x) as usize]
     }
 
+    pub fn euclidean_norm(&self) -> f64
+    where
+        T: Into<f64> + Copy,
+    {
+        self.data
+            .iter()
+            .map(|&v| {
+                let val: f64 = v.into();
+                val * val
+            })
+            .sum::<f64>()
+            .sqrt()
+    }
+
     pub fn from_file<P: AsRef<Path>>(file: P) -> Result<Self, Box<dyn std::error::Error>>
     where
         T: FromConvolve<f32> + Copy,
@@ -72,6 +86,13 @@ impl<T> ImageBuffer<T> {
                 .map(|&v| T::from_convolve(v as f32))
                 .collect(),
         })
+    }
+
+    pub fn manhattan_norm(&self) -> f64
+    where
+        T: Into<f64> + Copy,
+    {
+        self.data.iter().map(|&v| v.into().abs()).sum()
     }
 
     pub fn new(width: u32, height: u32, data: Vec<T>) -> Self {
@@ -126,6 +147,38 @@ impl ImageBuffer<GradientData<f32>> {
         gray_image.save(path)?;
 
         Ok(())
+    }
+}
+
+impl<T> ImageBuffer<T>
+where
+    T: Copy + Into<f32> + Ord + Sub<Output = T>,
+{
+    pub fn contrast(&self) -> T {
+        let min_val = *self.data.iter().min().unwrap();
+        let max_val = *self.data.iter().max().unwrap();
+        max_val - min_val
+    }
+
+    pub fn gradient_threshold(&self) -> f32 {
+        self.contrast().into() * 0.1
+    }
+}
+
+impl<T> ImageBuffer<T>
+where
+    T: Copy,
+{
+    pub fn convert<U>(&self) -> ImageBuffer<U>
+    where
+        U: Copy,
+        T: Into<U>,
+    {
+        ImageBuffer {
+            width: self.width,
+            height: self.height,
+            data: self.data.iter().map(|&x| x.into()).collect(),
+        }
     }
 }
 
