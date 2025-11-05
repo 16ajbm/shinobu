@@ -49,8 +49,7 @@ fn App() -> Element {
         image_processor::ImageProcessor::new(Box::new(image_processor::CrateImageProcessor))
             .gaussian_blur(&buffer, 3, 4.0);
 
-    let out_gray: GrayImage = (&processed_image).into();
-    out_gray.save("blurred.png")?;
+    let _: Result<(), _> = processed_image.to_u8().to_file("blurred.png".as_ref());
 
     rsx! {
         img { src: "blurred.png" }

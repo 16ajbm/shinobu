@@ -1,4 +1,5 @@
 use super::kernel::Kernel;
+use dioxus::html::link::r#as;
 use image::GrayImage;
 use std::cmp::{Eq, PartialEq};
 use std::ops::{Add, Mul, Sub};
@@ -10,6 +11,37 @@ pub struct ImageBuffer<T> {
     pub width: u32,
     pub height: u32,
 }
+
+pub trait ToU8 {
+    fn to_u8(self) -> u8;
+}
+
+impl ToU8 for u8 {
+    fn to_u8(self) -> u8 {
+        self // Identity conversion
+    }
+}
+
+impl ToU8 for f32 {
+    fn to_u8(self) -> u8 {
+        self.clamp(0.0, 255.0).round() as u8
+    }
+}
+
+// Now add a generic conversion method
+impl<T> ImageBuffer<T>
+where
+    T: Copy + ToU8,
+{
+    pub fn to_u8(&self) -> ImageBuffer<u8> {
+        ImageBuffer {
+            width: self.width,
+            height: self.height,
+            data: self.data.iter().map(|&x| x.to_u8()).collect(),
+        }
+    }
+}
+
 pub trait FromConvolve<F>: Sized {
     fn from_convolve(val: F) -> Self;
 }

@@ -8,7 +8,7 @@ use crate::image_processor::image_buffer::{GradientBuffer, GradientComponent, Gr
 use std::collections::VecDeque;
 
 const STD_DEV: f32 = 3.0;
-const KERNEL_SIZE: usize = 5;
+const KERNEL_SIZE: usize = 19;
 const LOW_THRESHOLD: f32 = 0.05 * 255.0;
 const HIGH_THRESHOLD: f32 = 0.50 * 255.0;
 
@@ -20,19 +20,20 @@ impl ImageProcessorTrait for CrateImageProcessor {
         image: &GrayScaleBuffer,
         kernel_size: usize,
         std_dev: f32,
-    ) -> GrayScaleBuffer {
+    ) -> ImageBuffer<f32> {
         let kernel = Kernel::<f32>::gaussian(kernel_size, std_dev);
-        image.convolve(&kernel)
-    }
-
-    fn compute_gradient(&self, image: &GrayScaleBuffer) -> GradientBuffer {
-        let sobel_x = Kernel::<f32>::sobel(SobelOrientation::Horizontal);
-        let sobel_y = Kernel::<f32>::sobel(SobelOrientation::Vertical);
 
         let f32_image: ImageBuffer<f32> = image.convert();
 
-        let gradient_x = f32_image.convolve(&sobel_x);
-        let gradient_y = f32_image.convolve(&sobel_y);
+        f32_image.convolve(&kernel)
+    }
+
+    fn compute_gradient(&self, image: &ImageBuffer<f32>) -> GradientBuffer {
+        let sobel_x = Kernel::<f32>::sobel(SobelOrientation::Horizontal);
+        let sobel_y = Kernel::<f32>::sobel(SobelOrientation::Vertical);
+
+        let gradient_x = image.convolve(&sobel_x);
+        let gradient_y = image.convolve(&sobel_y);
 
         let mut gradient_buffer = GradientBuffer::new(
             image.width,
@@ -62,8 +63,8 @@ impl ImageProcessorTrait for CrateImageProcessor {
         gradient_buffer
     }
 
-    fn non_maximum_suppression(&self, gradient_buffer: &GradientBuffer) -> GrayScaleBuffer {
-        let mut suppressed_data: Vec<u8> =
+    fn non_maximum_suppression(&self, gradient_buffer: &GradientBuffer) -> ImageBuffer<f32> {
+        let mut suppressed_data: Vec<f32> =
             Vec::with_capacity((gradient_buffer.width * gradient_buffer.height) as usize);
 
         for y in 0..gradient_buffer.height {
@@ -93,28 +94,28 @@ impl ImageProcessorTrait for CrateImageProcessor {
                 }
 
                 if is_local_maximum {
-                    suppressed_data.push(current_gradient.magnitude.clamp(0.0, 255.0) as u8);
+                    suppressed_data.push(current_gradient.magnitude);
                 } else {
-                    suppressed_data.push(0u8);
+                    suppressed_data.push(0.0);
                 }
             }
         }
 
-        GrayScaleBuffer::new(
+        ImageBuffer::new(
             gradient_buffer.width,
             gradient_buffer.height,
             suppressed_data,
         )
     }
 
-    fn double_threshold(&self, image: &GrayScaleBuffer, low: f32, high: f32) -> GrayScaleBuffer {
+    fn double_threshold(&self, image: &ImageBuffer<f32>, low: f32, high: f32) -> GrayScaleBuffer {
         let data: Vec<u8> = image
             .data
             .iter()
-            .map(|&val| {
-                if (val as f32) >= high {
+            .map(|&val: &f32| {
+                if val >= high {
                     STRONG_EDGE
-                } else if (val as f32) >= low {
+                } else if val >= low {
                     WEAK_EDGE
                 } else {
                     NON_EDGE
@@ -200,7 +201,7 @@ mod tests {
 
     proptest! {
         #[test]
-        fn test_compute_gradient_magnitude_relationnship(buffer in GrayScaleBuffer::random()) {
+        fn test_compute_gradient_magnitude_relationnship(buffer in ImageBuffer::<f32>::random()) {
             let processor = CrateImageProcessor;
             let gradient_buffer = processor.compute_gradient(&buffer);
 
@@ -214,7 +215,7 @@ mod tests {
         }
 
         #[test]
-        fn test_compute_gradient_zero_property(buffer in GrayScaleBuffer::uniform()) {
+        fn test_compute_gradient_zero_property(buffer in ImageBuffer::<f32>::uniform()) {
             let processor = CrateImageProcessor;
             let result = processor.compute_gradient(&buffer);
 
@@ -225,14 +226,14 @@ mod tests {
 
         #[test]
         fn test_double_threshold_classification(
-            buffer in GrayScaleBuffer::random(),
-            low in 0..254u8,
-            high in 1..255u8,
+            buffer in ImageBuffer::<f32>::random(),
+            low in 0.0f32..254.0f32,
+            high in 1.0f32..255.0f32,
         ) {
             prop_assume!(low < high);
 
             let processor = CrateImageProcessor;
-            let result = processor.double_threshold(&buffer, low as f32, high as f32);
+            let result = processor.double_threshold(&buffer, low, high);
 
             for (input_val, &output_val) in buffer.data.iter().zip(result.data.iter()) {
                 if *input_val >= high {
@@ -277,7 +278,7 @@ mod tests {
         }
 
         #[test]
-        fn test_non_maximum_suppression_thinning(buffer in GrayScaleBuffer::random()) {
+        fn test_non_maximum_suppression_thinning(buffer in ImageBuffer::<f32>::random()) {
             let processor = CrateImageProcessor;
             let gradient_buffer = processor.compute_gradient(&buffer);
             let suppressed = processor.non_maximum_suppression(&gradient_buffer);
@@ -287,7 +288,7 @@ mod tests {
                 .collect();
 
             let input_edge_pixels = gradient_as_u8.iter().filter(|&&p| p > 0).count();
-            let output_edge_pixels = suppressed.data.iter().filter(|&&p| p > 0).count();
+            let output_edge_pixels = suppressed.data.iter().filter(|&&p| p > 0.0).count();
 
             prop_assert!(
                 output_edge_pixels <= input_edge_pixels,
@@ -298,13 +299,13 @@ mod tests {
         }
 
         #[test]
-        fn test_non_maximum_suppression_zero_gradient(buffer in GrayScaleBuffer::uniform())
+        fn test_non_maximum_suppression_zero_gradient(buffer in ImageBuffer::<f32>::uniform())
         {
             let processor = CrateImageProcessor;
             let gradient_buffer = processor.compute_gradient(&buffer);
             let suppressed = processor.non_maximum_suppression(&gradient_buffer);
 
-            prop_assert!(suppressed.data.iter().all(|&p| p == 0));
+            prop_assert!(suppressed.data.iter().all(|&p| p == 0.0));
         }
     }
 }

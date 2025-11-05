@@ -9,6 +9,32 @@ pub trait TestDataStrategy<T> {
     fn vertical_edge() -> BoxedStrategy<T>;
 }
 
+impl TestDataStrategy<ImageBuffer<f32>> for ImageBuffer<f32> {
+    fn uniform() -> BoxedStrategy<ImageBuffer<f32>> {
+        GrayScaleBuffer::uniform()
+            .prop_map(|gray| gray.convert())
+            .boxed()
+    }
+
+    fn random() -> BoxedStrategy<ImageBuffer<f32>> {
+        GrayScaleBuffer::random()
+            .prop_map(|gray| gray.convert())
+            .boxed()
+    }
+
+    fn horizontal_edge() -> BoxedStrategy<ImageBuffer<f32>> {
+        GrayScaleBuffer::horizontal_edge()
+            .prop_map(|gray| gray.convert())
+            .boxed()
+    }
+
+    fn vertical_edge() -> BoxedStrategy<ImageBuffer<f32>> {
+        GrayScaleBuffer::vertical_edge()
+            .prop_map(|gray| gray.convert())
+            .boxed()
+    }
+}
+
 impl TestDataStrategy<GrayScaleBuffer> for GrayScaleBuffer {
     fn uniform() -> BoxedStrategy<GrayScaleBuffer> {
         (0u8..=255, 3u32..=10, 3u32..=10)
