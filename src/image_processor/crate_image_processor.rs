@@ -70,26 +70,27 @@ impl ImageProcessorTrait for CrateImageProcessor {
         for y in 0..gradient_buffer.height {
             for x in 0..gradient_buffer.width {
                 let current_gradient = gradient_buffer.get_pixel(x, y);
+
+                if current_gradient.magnitude == 0.0 {
+                    suppressed_data.push(0.0);
+                    continue;
+                }
+
                 let neighbours = current_gradient.discretize_direction();
 
                 let mut is_local_maximum = true;
 
                 for (dx, dy) in neighbours {
-                    let neighbour_x = x as i32 + dx;
-                    let neighbour_y = y as i32 + dy;
+                    let neighbour_x =
+                        (x as i32 + dx).clamp(0, gradient_buffer.width as i32 - 1) as u32;
+                    let neighbour_y =
+                        (y as i32 + dy).clamp(0, gradient_buffer.height as i32 - 1) as u32;
 
-                    if neighbour_x >= 0
-                        && neighbour_x < gradient_buffer.width as i32
-                        && neighbour_y >= 0
-                        && neighbour_y < gradient_buffer.height as i32
-                    {
-                        let neighbour_gradient =
-                            gradient_buffer.get_pixel(neighbour_x as u32, neighbour_y as u32);
+                    let neighbour_gradient = gradient_buffer.get_pixel(neighbour_x, neighbour_y);
 
-                        if neighbour_gradient.magnitude > current_gradient.magnitude {
-                            is_local_maximum = false;
-                            break;
-                        }
+                    if neighbour_gradient.magnitude > current_gradient.magnitude {
+                        is_local_maximum = false;
+                        break;
                     }
                 }
 
