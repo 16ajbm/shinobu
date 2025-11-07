@@ -156,7 +156,7 @@ impl<T> ImageBuffer<T> {
     }
 }
 
-impl ImageBuffer<GradientData<f32>> {
+impl GradientBuffer {
     pub fn to_file_with_component(
         &self,
         path: &Path,
@@ -179,6 +179,26 @@ impl ImageBuffer<GradientData<f32>> {
         gray_image.save(path)?;
 
         Ok(())
+    }
+
+    pub fn interpolate_magnitude(&self, y: f32, x: f32) -> f32 {
+        let x0 = x.floor() as u32;
+        let y0 = y.floor() as u32;
+        let x1 = (x0 + 1).min(self.width - 1);
+        let y1 = (y0 + 1).min(self.height - 1);
+
+        let a = x - x0 as f32;
+        let b = y - y0 as f32;
+
+        let top_left = self.get_pixel(x0, y0).magnitude;
+        let top_right = self.get_pixel(x1, y0).magnitude;
+        let bottom_left = self.get_pixel(x0, y1).magnitude;
+        let bottom_right = self.get_pixel(x1, y1).magnitude;
+
+        top_left * (1.0 - a) * (1.0 - b)
+            + top_right * a * (1.0 - b)
+            + bottom_left * (1.0 - a) * b
+            + bottom_right * a * b
     }
 }
 

@@ -64,40 +64,32 @@ impl ImageProcessorTrait for CrateImageProcessor {
     }
 
     fn non_maximum_suppression(&self, gradient_buffer: &GradientBuffer) -> ImageBuffer<f32> {
-        let mut suppressed_data: Vec<f32> =
-            Vec::with_capacity((gradient_buffer.width * gradient_buffer.height) as usize);
+        let mut suppressed_data =
+            vec![0.0f32; (gradient_buffer.width * gradient_buffer.height) as usize];
 
-        for y in 0..gradient_buffer.height {
-            for x in 0..gradient_buffer.width {
-                let current_gradient = gradient_buffer.get_pixel(x, y);
+        for i in 1..gradient_buffer.height - 1 {
+            for j in 1..gradient_buffer.width - 1 {
+                let current_gradient = gradient_buffer.get_pixel(j, i);
 
-                if current_gradient.magnitude == 0.0 {
-                    suppressed_data.push(0.0);
+                if current_gradient.x_component == 0.0 && current_gradient.y_component == 0.0 {
                     continue;
                 }
 
-                let neighbours = current_gradient.discretize_direction();
+                let norm = (current_gradient.x_component.powi(2)
+                    + current_gradient.y_component.powi(2))
+                .sqrt();
 
-                let mut is_local_maximum = true;
+                let (dx, dy) = (
+                    current_gradient.x_component / norm,
+                    current_gradient.y_component / norm,
+                );
 
-                for (dx, dy) in neighbours {
-                    let neighbour_x =
-                        (x as i32 + dx).clamp(0, gradient_buffer.width as i32 - 1) as u32;
-                    let neighbour_y =
-                        (y as i32 + dy).clamp(0, gradient_buffer.height as i32 - 1) as u32;
+                let mag1 = gradient_buffer.interpolate_magnitude(i as f32 + dy, j as f32 + dx);
+                let mag2 = gradient_buffer.interpolate_magnitude(i as f32 - dy, j as f32 - dx);
 
-                    let neighbour_gradient = gradient_buffer.get_pixel(neighbour_x, neighbour_y);
-
-                    if neighbour_gradient.magnitude > current_gradient.magnitude {
-                        is_local_maximum = false;
-                        break;
-                    }
-                }
-
-                if is_local_maximum {
-                    suppressed_data.push(current_gradient.magnitude);
-                } else {
-                    suppressed_data.push(0.0);
+                let index = (i * gradient_buffer.width + j) as usize;
+                if current_gradient.magnitude >= mag1 && current_gradient.magnitude >= mag2 {
+                    suppressed_data[index] = current_gradient.magnitude;
                 }
             }
         }
