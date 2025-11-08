@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc f3da2d63cf873f553e7caf891402f92b603b4a660b9fb982d1d584452c439b15 # shrinks to horizontal_edge = ImageBuffer { data: [127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127], width: 4, height: 4 }
