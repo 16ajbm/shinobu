@@ -1,5 +1,7 @@
 pub mod svg_painter;
 
+pub mod poisson;
+
 use self::svg_painter::SvgPainter;
 
 const COLOURS_PER_PALETTE: usize = 6;
@@ -55,14 +57,23 @@ pub struct PlateConfig {
     pub dot_size: u32,
     pub width: u32,
     pub height: u32,
+    pub density: u32,
+    pub size_jitter: f32,
+    pub position_jitter: f32,
     pub primary: Palette,
     pub secondary: Palette,
     pub background: Option<HexColour>,
-    pub density: u32,
 }
 
 impl PlateConfig {
-    pub fn new(width: u32, height: u32, density: u32, dot_size: u32) -> Self {
+    pub fn new(
+        width: u32,
+        height: u32,
+        density: u32,
+        dot_size: u32,
+        size_jitter: f32,
+        position_jitter: f32,
+    ) -> Self {
         Self {
             dot_size,
             width,
@@ -71,6 +82,8 @@ impl PlateConfig {
             secondary: Palette::default(),
             background: None,
             density,
+            size_jitter,
+            position_jitter,
         }
     }
 }
