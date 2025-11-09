@@ -6,8 +6,6 @@ use crate::generator::Plate;
 
 pub struct SvgPainter;
 
-// String is SVG path
-// TODO - find a better way to return reference to artifact
 impl super::Painter for SvgPainter {
     fn paint(&self, plate: Plate) -> String {
         let mut document = setup_document(plate.config.width, plate.config.height);
@@ -22,7 +20,6 @@ impl super::Painter for SvgPainter {
 
         for dot in plate.dots.iter() {
             let circle = draw_circle(dot.clone());
-            // Add the circle to the document
             document = document.add(circle);
         }
 

@@ -15,7 +15,6 @@ pub struct PoissonSampler {
     active_list: Vec<SampleIndex>,
 }
 
-// Two dimensional grid to hold sample indices
 type Grid = Vec<Vec<SampleIndex>>;
 
 type SampleIndex = i32;
@@ -48,12 +47,6 @@ impl PoissonSampler {
     }
 
     pub fn generate_samples(&mut self) -> Vec<Sample> {
-        // Poisson disk sampling algorithm implementation
-        // Returns a vector of Sample structs
-
-        // 0. Initialize grid, active list, and samples list
-
-        // 1. Generate initial sample
         let initial_sample = self.generate_initial_sample();
         self.insert_sample_into_grid(&initial_sample, 0);
         self.sample_list.push(initial_sample);

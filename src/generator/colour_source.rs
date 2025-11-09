@@ -34,22 +34,17 @@ impl<'a> EdgeBasedColourSource<'a> {
 
 impl<'a> ColourSource for EdgeBasedColourSource<'a> {
     fn sample_colour(&self, x: f32, y: f32) -> HexColour {
-        // Trait method
-        // 1. Convert float coords to pixel coords
         let px = (x as u32).min(self.width - 1);
         let py = (y as u32).min(self.height - 1);
 
-        // 2. Check edge map
         let is_edge = self.edge_map.get_pixel(px, py) == STRONG_EDGE;
 
-        // 3. Choose palette
         let palette = if is_edge {
             self.primary
         } else {
             self.secondary
         };
 
-        // 4. Random color from palette
         palette.random_colour()
     }
 }
