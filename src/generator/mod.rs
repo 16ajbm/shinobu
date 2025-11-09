@@ -56,3 +56,33 @@ impl Generator {
         self.paint(plate)
     }
 }
+
+pub fn create_plate(
+    edge_map: &ImageBuffer<u8>,
+    dot_size: u32,
+    size_jitter: f32,
+    spacing_multiplier: f32,
+) -> String {
+    use crate::generator::{poisson::PoissonSampler, Generator, Palette, PlateConfig};
+
+    let config = PlateConfig {
+        width: edge_map.width,
+        height: edge_map.height,
+        dot_size,
+        size_jitter,
+        spacing_multiplier,
+        primary: Palette::red(),
+        secondary: Palette::green(),
+        background: None,
+    };
+
+    let mut sampler = PoissonSampler::new(
+        edge_map.width as f32,
+        edge_map.height as f32,
+        config.poisson_radius(),
+        30,
+    );
+    let points = sampler.generate_samples();
+
+    Generator::new().generate_and_paint(points, edge_map, config)
+}
