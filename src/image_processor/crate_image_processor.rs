@@ -10,7 +10,7 @@ use std::collections::VecDeque;
 const STD_DEV: f32 = 3.0;
 const KERNEL_SIZE: usize = 19;
 const LOW_THRESHOLD: f32 = 0.05 * 255.0;
-const HIGH_THRESHOLD: f32 = 0.50 * 255.0;
+const HIGH_THRESHOLD: f32 = 0.75 * 255.0;
 
 pub struct CrateImageProcessor;
 
@@ -191,6 +191,49 @@ mod tests {
     use crate::image_processor::image_buffer::ApproxEq;
     use crate::image_processor::test_utils::TestDataStrategy;
     use proptest::prelude::*;
+
+    #[test]
+    fn test_canny_edge_detection() {
+        let processor = CrateImageProcessor;
+
+        let manifest_dir = env!("CARGO_MANIFEST_DIR");
+
+        let image_path = format!("{}/extras/cells_example/CellsInput.png", manifest_dir);
+        let gaussian_path = format!("{}/gaussian_blur_output.png", manifest_dir);
+        let gradient_path = format!("{}/gradient_output.png", manifest_dir);
+        let gradient_x_path = format!("{}/gradient_x_output.png", manifest_dir);
+        let gradient_y_path = format!("{}/gradient_y_output.png", manifest_dir);
+        let non_max_path = format!("{}/non_max_suppression_output.png", manifest_dir);
+        let double_threshold_path = format!("{}/double_threshold_output.png", manifest_dir);
+        let output_path = format!("{}/canny_edge_output.png", manifest_dir);
+
+
+        let image = GrayScaleBuffer::from_file(&image_path);
+
+        assert!(image.is_ok());
+        let image = image.unwrap();
+
+        let gaussian_result = processor.gaussian_blur(&image, KERNEL_SIZE, STD_DEV);
+        let gradient_result = processor.compute_gradient(&gaussian_result);
+        let non_max_result = processor.non_maximum_suppression(&gradient_result);
+        let double_threshold_result = processor.double_threshold(&non_max_result, LOW_THRESHOLD, HIGH_THRESHOLD);
+        let edge_extension_result = processor.edge_extension(&double_threshold_result);
+
+        let result = processor.canny_edge_detection(&image);
+
+        gaussian_result.to_u8().to_file(gaussian_path.as_ref()).unwrap();
+
+        gradient_result.to_file_with_component(gradient_path.as_ref(), GradientComponent::Magnitude).unwrap();
+        gradient_result.to_file_with_component(gradient_x_path.as_ref(), GradientComponent::XComponent).unwrap();
+        gradient_result.to_file_with_component(gradient_y_path.as_ref(), GradientComponent::YComponent).unwrap();
+        non_max_result.to_u8().to_file(non_max_path.as_ref()).unwrap();
+        double_threshold_result.to_file(double_threshold_path.as_ref()).unwrap();
+        edge_extension_result.to_file(output_path.as_ref()).unwrap();
+
+        result.to_file(output_path.as_ref()).unwrap();
+
+        assert!(true);
+    }
 
     proptest! {
         #[test]

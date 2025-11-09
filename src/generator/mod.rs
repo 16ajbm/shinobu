@@ -2,14 +2,20 @@ pub mod svg_painter;
 
 pub mod poisson;
 
-use self::svg_painter::SvgPainter;
+pub mod colour_source;
 
-const COLOURS_PER_PALETTE: usize = 6;
+pub mod palette;
+
+use crate::{generator::colour_source::EdgeBasedColourSource, image_processor::ImageBuffer};
+
+use self::colour_source::ColourSource;
+pub use self::palette::Palette;
+use self::svg_painter::SvgPainter;
 
 // Hexadecimal color representation
 type HexColour = String;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Point {
     pub x: f32,
     pub y: f32,
@@ -39,13 +45,17 @@ impl Plate {
         }
     }
 
-    pub fn from_points(points: Vec<Point>, config: PlateConfig) -> Self {
+    pub fn from_points(
+        points: Vec<Point>,
+        config: PlateConfig,
+        colour_source: &dyn ColourSource,
+    ) -> Self {
         let dots = points
             .into_iter()
             .map(|point| Dot {
+                color: colour_source.sample_colour(point.x, point.y),
                 position: point,
                 size: config.dot_size,
-                color: config.primary.colors[0].clone(),
                 shape: "circle".to_string(),
             })
             .collect();
@@ -80,34 +90,13 @@ impl PlateConfig {
             dot_size,
             width,
             height,
-            primary: Palette::new("#ffffff".to_string()),
+            primary: Palette::from_colour("#ffffff".to_string()),
             secondary: Palette::default(),
             background: None,
             density,
             size_jitter,
             position_jitter,
         }
-    }
-}
-
-// Opting for struct instead of alias in case there is any other additional attributes that
-// may be needed in the future.
-#[derive(Debug, Clone)]
-pub struct Palette {
-    colors: [HexColour; COLOURS_PER_PALETTE],
-}
-
-impl Palette {
-    pub fn new(colour: HexColour) -> Self {
-        Self {
-            colors: std::array::from_fn(|_| colour.clone()),
-        }
-    }
-}
-
-impl Default for Palette {
-    fn default() -> Self {
-        Self::new("#000000ff".to_string())
     }
 }
 
@@ -128,5 +117,30 @@ impl Generator {
 
     pub fn paint(&self, plate: Plate) -> String {
         self.painter.paint(plate)
+    }
+
+    pub fn generate_from_edges(
+        &self,
+        points: Vec<Point>,
+        edge_map: &ImageBuffer<u8>,
+        config: PlateConfig,
+    ) -> Plate {
+        let primary = config.primary.clone();
+        let secondary = config.secondary.clone();
+
+        let color_source =
+            EdgeBasedColourSource::new(config.width, config.height, edge_map, &primary, &secondary);
+
+        Plate::from_points(points, config, &color_source)
+    }
+
+    pub fn generate_and_paint(
+        &self,
+        points: Vec<Point>,
+        edge_map: &ImageBuffer<u8>,
+        config: PlateConfig,
+    ) -> String {
+        let plate = self.generate_from_edges(points, edge_map, config);
+        self.paint(plate)
     }
 }
