@@ -9,15 +9,20 @@ const COLOURS_PER_PALETTE: usize = 6;
 // Hexadecimal color representation
 type HexColour = String;
 
+#[derive(Debug, Clone)]
+pub struct Point {
+    pub x: f32,
+    pub y: f32,
+}
+
 // Dots are the individual coloured elements that make up a plate. Although they are called "dots",
 // they can come in a variety of shapes.
 #[derive(Debug, Clone)]
 pub struct Dot {
-    x: u32,
-    y: u32,
-    size: u32,
-    color: HexColour,
-    shape: String,
+    pub position: Point,
+    pub size: u32,
+    pub color: HexColour,
+    pub shape: String,
 }
 
 #[derive(Debug, Clone)]
@@ -29,26 +34,23 @@ pub struct Plate {
 impl Plate {
     pub fn new(config: PlateConfig) -> Self {
         Self {
-            dots: Self::generate_dots(config.clone()),
+            dots: Vec::new(),
             config,
         }
     }
 
-    fn generate_dots(config: PlateConfig) -> Vec<Dot> {
-        let mut dots = Vec::new();
-        for x in (0..config.width).step_by(10) {
-            for y in (0..config.height).step_by(10) {
-                let dot = Dot {
-                    x,
-                    y,
-                    size: config.dot_size,
-                    color: config.primary.colors[0].clone(),
-                    shape: "circle".to_string(),
-                };
-                dots.push(dot);
-            }
-        }
-        dots
+    pub fn from_points(points: Vec<Point>, config: PlateConfig) -> Self {
+        let dots = points
+            .into_iter()
+            .map(|point| Dot {
+                position: point,
+                size: config.dot_size,
+                color: config.primary.colors[0].clone(),
+                shape: "circle".to_string(),
+            })
+            .collect();
+
+        Self { dots, config }
     }
 }
 
@@ -96,7 +98,7 @@ pub struct Palette {
 }
 
 impl Palette {
-    fn new(colour: HexColour) -> Self {
+    pub fn new(colour: HexColour) -> Self {
         Self {
             colors: std::array::from_fn(|_| colour.clone()),
         }

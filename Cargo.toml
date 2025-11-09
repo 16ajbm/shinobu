@@ -9,9 +9,12 @@ edition = "2021"
 [dependencies]
 dioxus = { version = "0.6.0", features = ["router", "fullstack"] }
 image = "0.25.7"
-proptest = "1.8.0"
 rand = "0.9.2"
 svg = "0.18.0"
+getrandom = { version = "0.3", features = ["wasm_js"] }
+
+[dev-dependencies]
+proptest = "1.8.0"
 
 [features]
 default = ["web"]

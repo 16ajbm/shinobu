@@ -2,7 +2,7 @@
 
 use crate::generator::{Dot, Plate, PlatePainter};
 
-use svg::node::element::Circle;
+use svg::node::element::{Circle, Rectangle};
 use svg::Document;
 
 pub struct SvgPainter;
@@ -11,31 +11,37 @@ pub struct SvgPainter;
 // TODO - find a better way to return reference to artifact
 impl PlatePainter for SvgPainter {
     fn paint(&self, plate: Plate) -> String {
-        let mut document = Document::new()
-            .set("width", plate.config.width)
-            .set("height", plate.config.height)
-            .set("fill", "none");
+        let mut document = setup_document(plate.config.width, plate.config.height);
+
+        if let Some(bg_color) = &plate.config.background {
+            let background = Rectangle::new()
+                .set("width", plate.config.width)
+                .set("height", plate.config.height)
+                .set("fill", bg_color.as_str());
+            document = document.add(background);
+        }
 
         for dot in plate.dots.iter() {
-            let circle = draw_dot(dot.clone());
+            let circle = draw_circle(dot.clone());
             // Add the circle to the document
             document = document.add(circle);
         }
 
-        // Implementation details go here
-
-        let path = "output.svg";
-
-        svg::save(path, &document).unwrap();
-
-        path.to_string()
+        document.to_string()
     }
 }
 
-fn draw_dot(dot: Dot) -> Circle {
+fn setup_document(width: u32, height: u32) -> Document {
+    Document::new()
+        .set("width", width)
+        .set("height", height)
+        .set("fill", "none")
+}
+
+fn draw_circle(dot: Dot) -> Circle {
     let circle = Circle::new()
-        .set("cx", dot.x)
-        .set("cy", dot.y)
+        .set("cx", dot.position.x)
+        .set("cy", dot.position.y)
         .set("r", dot.size)
         .set("fill", dot.color);
 

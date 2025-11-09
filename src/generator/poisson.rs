@@ -1,4 +1,7 @@
+use crate::generator::Point;
 use rand::Rng;
+
+type Sample = Point;
 
 pub struct PoissonSampler {
     width: f32,
@@ -9,12 +12,6 @@ pub struct PoissonSampler {
     grid: Grid,
     sample_list: Vec<Sample>,
     active_list: Vec<SampleIndex>,
-}
-
-#[derive(Debug, Clone)]
-pub struct Sample {
-    pub x: f32,
-    pub y: f32,
 }
 
 // Two dimensional grid to hold sample indices
@@ -164,7 +161,6 @@ impl PoissonSampler {
 mod tests {
     use super::*;
 
-
     fn assert_in_range(value: f32, min: f32, max: f32, msg: &str) {
         const TOLERANCE: f32 = 1e-4;
 
@@ -201,7 +197,7 @@ mod tests {
         let width = 100.0;
         let height = 100.0;
 
-        let mut sampler = PoissonSampler::new(width, height , 5.0, 30);
+        let mut sampler = PoissonSampler::new(width, height, 5.0, 30);
         let samples = sampler.generate_samples();
 
         for (i, sample) in samples.iter().enumerate() {
@@ -236,7 +232,4 @@ mod tests {
             assert_in_range(dist, 5.0, 10.0, "Annulus distance");
         }
     }
-
-
-
 }
