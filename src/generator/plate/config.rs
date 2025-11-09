@@ -52,4 +52,9 @@ impl PlateConfig {
         let max = base * (1.0 + self.size_jitter);
         rand::rng().random_range(min as u32..=max as u32)
     }
+
+    pub fn min_dot_size(&self) -> u32 {
+        let base = self.dot_size as f32;
+        (base * (1.0 - self.size_jitter)).max(1.0) as u32
+    }
 }
