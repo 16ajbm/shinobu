@@ -1,11 +1,12 @@
 mod generator;
 mod image_processor;
 
+use dioxus::html::geometry::euclid::num::Ceil;
 // The dioxus prelude contains a ton of common items used in dioxus apps. It's a good idea to import wherever you
 // need dioxus
 use dioxus::prelude::*;
 
-use crate::generator::poisson::PoissonSampler;
+use crate::generator::poisson::{self, PoissonSampler};
 use crate::generator::{Generator, Palette, PlateConfig};
 use crate::image_processor::ImageBuffer;
 
@@ -24,7 +25,7 @@ fn App() -> Element {
     let svg = use_memo(move || {
         let manifest_dir = env!("CARGO_MANIFEST_DIR");
 
-        let image_path = format!("{}/extras/Serge.png", manifest_dir);
+        let image_path = format!("{}/extras/seven.png", manifest_dir);
 
         let edge_map: ImageBuffer<u8> = match ImageBuffer::from_file(&image_path) {
             Ok(map) => {
@@ -42,23 +43,26 @@ fn App() -> Element {
             }
         };
 
-        let mut sampler =
-            PoissonSampler::new(edge_map.width as f32, edge_map.height as f32, 5.0, 30);
-        let points = sampler.generate_samples();
-
-        println!("Generated {} points", points.len());
-
         let config = PlateConfig {
             width: edge_map.width,
             height: edge_map.height,
-            dot_size: 3,
-            density: 0,           // Not used
-            size_jitter: 0.2,     // Not used
-            position_jitter: 0.0, // Not used
+            dot_size: 10,
+            size_jitter: 0.3,
+            spacing_multiplier: 1.0,
             primary: Palette::red(),
             secondary: Palette::green(),
             background: None, // Not used
         };
+
+        let mut sampler = PoissonSampler::new(
+            edge_map.width as f32,
+            edge_map.height as f32,
+            config.poisson_radius(),
+            30,
+        );
+        let points = sampler.generate_samples();
+
+        println!("Generated {} points", points.len());
 
         Generator::new().generate_and_paint(points, &edge_map, config)
     });

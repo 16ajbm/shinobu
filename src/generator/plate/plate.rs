@@ -1,3 +1,5 @@
+use rand::Rng;
+
 use crate::generator::{
     colour_source::ColourSource,
     plate::{config::PlateConfig, dot::Dot},
@@ -25,14 +27,89 @@ impl Plate {
     ) -> Self {
         let dots = points
             .into_iter()
-            .map(|point| Dot {
-                color: colour_source.sample_colour(point.x, point.y),
-                position: point,
-                size: config.dot_size,
-                shape: "circle".to_string(),
+            .map(|point| {
+                let size = config.random_dot_size();
+                Dot {
+                    color: colour_source.sample_colour(point.x, point.y, size as f32),
+                    position: point,
+                    size,
+                    shape: "circle".to_string(),
+                }
             })
             .collect();
 
         Self { dots, config }
+    }
+
+    pub fn fill_gaps(&mut self, attempts: usize, colour_source: &dyn ColourSource) {
+        for _ in 0..attempts {
+            let position = self.random_position(&mut rand::rng());
+
+            if let Some(max_radius) = self.max_dot_size_at(&position) {
+                let desired_size = self.config.random_dot_size();
+                let actual_size = desired_size.min(max_radius);
+
+                if self.can_place_dot_at(&position, actual_size) {
+                    let dot = self.create_dot(position, actual_size, colour_source);
+                    self.dots.push(dot);
+                }
+            }
+        }
+    }
+
+    /// Calculate the maximum dot radius that can fit at a position without overlapping.
+    fn max_dot_size_at(&self, position: &Point) -> Option<u32> {
+        let available_radius = self.available_radius_at(position)?;
+        let max_radius = available_radius / self.config.spacing_multiplier;
+
+        if max_radius >= self.config.min_dot_size() as f32 {
+            Some(max_radius as u32)
+        } else {
+            None
+        }
+    }
+
+    /// Calculate the available radius at a position based on the closest existing dot.
+    fn available_radius_at(&self, position: &Point) -> Option<f32> {
+        self.dots
+            .iter()
+            .map(|dot| {
+                let distance_to_center = Self::distance(&dot.position, position);
+                distance_to_center - dot.size as f32
+            })
+            .min_by(|a, b| a.partial_cmp(b).unwrap())
+    }
+
+    /// Check if a dot of given size can be placed at position without overlap.
+    fn can_place_dot_at(&self, position: &Point, new_dot_radius: u32) -> bool {
+        self.dots.iter().all(|existing_dot| {
+            let min_distance =
+                (new_dot_radius + existing_dot.size) as f32 * self.config.spacing_multiplier;
+            let distance = Self::distance(&existing_dot.position, position);
+            distance >= min_distance
+        })
+    }
+
+    /// Calculate Euclidean distance between two points.
+    fn distance(p1: &Point, p2: &Point) -> f32 {
+        ((p1.x - p2.x).powi(2) + (p1.y - p2.y).powi(2)).sqrt()
+    }
+
+    fn create_dot(&self, position: Point, size: u32, colour_source: &dyn ColourSource) -> Dot {
+        let color = colour_source.sample_colour(position.x, position.y, size as f32);
+        Dot {
+            position,
+            size,
+            color,
+            shape: "circle".to_string(),
+        }
+    }
+
+    /// Generate a random position within the plate bounds
+    fn random_position(&self, rng: &mut impl Rng) -> Point {
+        Point {
+            x: rng.random_range(0.0..self.config.width as f32),
+            y: rng.random_range(0.0..self.config.height as f32),
+        }
     }
 }

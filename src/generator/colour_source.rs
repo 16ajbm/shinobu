@@ -3,7 +3,7 @@ use crate::generator::HexColour;
 use crate::image_processor::{GrayScaleBuffer, STRONG_EDGE};
 
 pub trait ColourSource {
-    fn sample_colour(&self, x: f32, y: f32) -> HexColour;
+    fn sample_colour(&self, x: f32, y: f32, radius: f32) -> HexColour;
 }
 
 pub struct EdgeBasedColourSource<'a> {
@@ -33,18 +33,26 @@ impl<'a> EdgeBasedColourSource<'a> {
 }
 
 impl<'a> ColourSource for EdgeBasedColourSource<'a> {
-    fn sample_colour(&self, x: f32, y: f32) -> HexColour {
-        let px = (x as u32).min(self.width - 1);
-        let py = (y as u32).min(self.height - 1);
+    fn sample_colour(&self, x: f32, y: f32, radius: f32) -> HexColour {
+        let sample_points = [
+            (x, y),
+            (x + radius, y),
+            (x - radius, y),
+            (x, y + radius),
+            (x, y - radius),
+        ];
 
-        let is_edge = self.edge_map.get_pixel(px, py) == STRONG_EDGE;
+        let overlaps_edge = sample_points.iter().any(|&(sx, sy)| {
+            let px = (sx as u32).clamp(0, self.width - 1);
+            let py = (sy as u32).clamp(0, self.height - 1);
+            self.edge_map.get_pixel(px, py) == STRONG_EDGE
+        });
 
-        let palette = if is_edge {
+        let palette = if overlaps_edge {
             self.primary
         } else {
             self.secondary
         };
-
         palette.random_colour()
     }
 }
