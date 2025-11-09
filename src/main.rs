@@ -1,14 +1,13 @@
+mod generator;
+mod image_processor;
+
 // The dioxus prelude contains a ton of common items used in dioxus apps. It's a good idea to import wherever you
 // need dioxus
 use dioxus::prelude::*;
 
-mod generator;
-mod image_processor;
-
 use crate::generator::poisson::PoissonSampler;
-use crate::image_processor::ImageBuffer;
-
 use crate::generator::{Generator, Palette, PlateConfig};
+use crate::image_processor::ImageBuffer;
 
 fn main() {
     // The `launch` function is the main entry point for a dioxus app. It takes a component and renders it with the platform feature

@@ -1,22 +1,17 @@
+pub mod colour_source;
 pub mod painter;
-
+pub mod palette;
+pub mod plate;
+pub mod point;
 pub mod poisson;
 
-pub mod plate;
-
-pub mod point;
-
-pub mod colour_source;
-
-pub mod palette;
-
-use crate::{generator::colour_source::EdgeBasedColourSource, image_processor::ImageBuffer};
+use crate::generator::colour_source::EdgeBasedColourSource;
+use crate::image_processor::ImageBuffer;
 
 pub use self::palette::Palette;
 pub use self::plate::{Dot, Plate, PlateConfig};
 pub use self::point::Point;
 
-// Hexadecimal color representation
 pub type HexColour = String;
 
 pub struct Generator {

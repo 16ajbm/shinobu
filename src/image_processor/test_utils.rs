@@ -1,6 +1,7 @@
+use proptest::prelude::*;
+
 use super::*;
 use crate::image_processor::image_buffer::GrayScaleBuffer;
-use proptest::prelude::*;
 
 pub trait TestDataStrategy<T> {
     fn uniform() -> BoxedStrategy<T>;

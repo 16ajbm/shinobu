@@ -1,7 +1,8 @@
 use svg::node::element::{Circle, Rectangle};
 use svg::Document;
 
-use crate::generator::{Dot, Plate};
+use crate::generator::Dot;
+use crate::generator::Plate;
 
 pub struct SvgPainter;
 

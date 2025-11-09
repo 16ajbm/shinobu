@@ -1,6 +1,6 @@
-use crate::generator::HexColour;
-
 use rand::Rng;
+
+use crate::generator::HexColour;
 
 const COLOURS_PER_PALETTE: usize = 6;
 

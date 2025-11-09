@@ -1,5 +1,6 @@
-use crate::generator::Point;
 use rand::Rng;
+
+use crate::generator::Point;
 
 type Sample = Point;
 

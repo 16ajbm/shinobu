@@ -1,11 +1,10 @@
+use std::collections::VecDeque;
+
+use crate::image_processor::image_buffer::{GradientBuffer, GradientData};
 use crate::image_processor::{
     GrayScaleBuffer, ImageBuffer, ImageProcessorTrait, Kernel, SobelOrientation, NON_EDGE,
     STRONG_EDGE, WEAK_EDGE,
 };
-
-use crate::image_processor::image_buffer::{GradientBuffer, GradientData};
-
-use std::collections::VecDeque;
 
 const STD_DEV: f32 = 3.0;
 const KERNEL_SIZE: usize = 19;
