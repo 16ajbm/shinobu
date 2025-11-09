@@ -1,5 +1,3 @@
-use svg::node::element::Image;
-
 use crate::image_processor::{image_buffer::GradientBuffer, GrayScaleBuffer, ImageBuffer};
 
 // Edge classification constants - available to all implementations

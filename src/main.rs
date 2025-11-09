@@ -1,15 +1,13 @@
+mod generator;
+mod image_processor;
+
 // The dioxus prelude contains a ton of common items used in dioxus apps. It's a good idea to import wherever you
 // need dioxus
 use dioxus::prelude::*;
 
-use image::{open, GrayImage};
-
-mod generator;
-mod image_processor;
-
-use crate::image_processor::{ImageBuffer, ImageProcessor, Kernel};
-
-use crate::generator::{Generator, Plate, PlateConfig};
+use crate::generator::poisson::PoissonSampler;
+use crate::generator::{Generator, Palette, PlateConfig};
+use crate::image_processor::ImageBuffer;
 
 fn main() {
     // The `launch` function is the main entry point for a dioxus app. It takes a component and renders it with the platform feature
@@ -23,35 +21,49 @@ fn main() {
 /// Components should be annotated with `#[component]` to support props, better error messages, and autocomplete
 #[component]
 fn App() -> Element {
-    // Plate code
-    // let width: u32 = 600;
-    // let height: u32 = 600;
-    // let density: u32 = 10;
-    // let dot_size: u32 = 2;
+    let svg = use_memo(move || {
+        let manifest_dir = env!("CARGO_MANIFEST_DIR");
 
-    // let plate_config = PlateConfig::new(width, height, density, dot_size);
+        let image_path = format!("{}/extras/Serge.png", manifest_dir);
 
-    // let plate = Plate::new(plate_config);
-    // let generator = Generator::new();
+        let edge_map: ImageBuffer<u8> = match ImageBuffer::from_file(&image_path) {
+            Ok(map) => {
+                println!(
+                    "Image: {}x{}, {} pixels",
+                    map.width,
+                    map.height,
+                    map.data.len()
+                );
+                map
+            }
+            Err(e) => {
+                println!("Failed to load image: {}", e);
+                panic!("Cannot continue without image");
+            }
+        };
 
-    // // let generated_plate = generator.paint(&mut plate.clone());
+        let mut sampler =
+            PoissonSampler::new(edge_map.width as f32, edge_map.height as f32, 5.0, 30);
+        let points = sampler.generate_samples();
 
-    // let SVG: String = generator.paint(plate);
+        println!("Generated {} points", points.len());
 
-    // rsx! {
-    //     img { src: SVG.as_str() }
-    // }
+        let config = PlateConfig {
+            width: edge_map.width,
+            height: edge_map.height,
+            dot_size: 3,
+            density: 0,           // Not used
+            size_jitter: 0.2,     // Not used
+            position_jitter: 0.0, // Not used
+            primary: Palette::red(),
+            secondary: Palette::green(),
+            background: None, // Not used
+        };
 
-    let gray_image: GrayImage = image::open("guassian-test.png")?.to_luma8();
-    let buffer = image_processor::ImageBuffer::from(&gray_image);
-
-    let processed_image =
-        image_processor::ImageProcessor::new(Box::new(image_processor::CrateImageProcessor))
-            .gaussian_blur(&buffer, 3, 4.0);
-
-    let _: Result<(), _> = processed_image.to_u8().to_file("blurred.png".as_ref());
+        Generator::new().generate_and_paint(points, &edge_map, config)
+    });
 
     rsx! {
-        img { src: "blurred.png" }
+        div { dangerous_inner_html: "{svg}" }
     }
 }
