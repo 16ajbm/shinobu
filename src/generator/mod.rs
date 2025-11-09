@@ -41,7 +41,9 @@ impl Generator {
         let color_source =
             EdgeBasedColourSource::new(config.width, config.height, edge_map, &primary, &secondary);
 
-        Plate::from_points(points, config, &color_source)
+        let mut plate = Plate::from_points(points, config, &color_source);
+        plate.fill_gaps(15, &color_source);
+        plate
     }
 
     pub fn generate_and_paint(
