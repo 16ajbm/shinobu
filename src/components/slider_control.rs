@@ -12,13 +12,16 @@ pub fn SliderControl(
     rsx! {
         div {
             class: "slider-control",
+            style: "margin-bottom: 16px;",
             label {
                 class: "slider-label",
+                style: "display: block; margin-bottom: 8px; font-weight: 500; font-size: inherit;",
                 "{label}: {value():.precision$}"
             }
             input {
                 r#type: "range",
                 class: "slider-input",
+                style: "width: 100%; height: 6px; cursor: pointer;",
                 min: "{min}",
                 max: "{max}",
                 step: "{step}",

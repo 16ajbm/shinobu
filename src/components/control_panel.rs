@@ -19,9 +19,12 @@ pub fn ControlPanel(
 
     rsx! {
         aside {
-            style: "width: 300px; padding: 20px; background: white; border-right: 1px solid #ccc; overflow-y: auto;",
+            style: "width: 25%; min-width: 280px; max-width: 600px; padding: 20px; background: white; border-right: 1px solid #ccc; overflow-y: auto; font-size: clamp(16px, 1.5vw, 20px);",
 
-            h2 { "Plate Controls" }
+            h2 { 
+                style: "font-size: clamp(22px, 2.5vw, 28px); margin-bottom: 16px;",
+                "Plate Controls" 
+            }
 
             ControlGroup {
                 title: "Dot Sizing",
