@@ -1,15 +1,13 @@
-// Generator implementation using the `svg` crate
-
-use crate::generator::{Dot, Plate, PlatePainter};
-
 use svg::node::element::{Circle, Rectangle};
 use svg::Document;
+
+use crate::generator::{Dot, Plate};
 
 pub struct SvgPainter;
 
 // String is SVG path
 // TODO - find a better way to return reference to artifact
-impl PlatePainter for SvgPainter {
+impl super::Painter for SvgPainter {
     fn paint(&self, plate: Plate) -> String {
         let mut document = setup_document(plate.config.width, plate.config.height);
 
