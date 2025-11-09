@@ -8,8 +8,6 @@ pub mod sobel_orientation;
 #[cfg(test)]
 pub mod test_utils;
 
-pub use clampable::Clampable;
-pub use crate_image_processor::CrateImageProcessor;
 pub use image_buffer::{GrayScaleBuffer, ImageBuffer};
 pub use image_processor::{ImageProcessor, ImageProcessorTrait, NON_EDGE, STRONG_EDGE, WEAK_EDGE};
 pub use kernel::Kernel;

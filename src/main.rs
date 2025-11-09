@@ -2,16 +2,13 @@
 // need dioxus
 use dioxus::prelude::*;
 
-use image::{open, GrayImage};
-
 mod generator;
 mod image_processor;
 
 use crate::generator::poisson::PoissonSampler;
-use crate::image_processor::{ImageBuffer, ImageProcessor, Kernel};
+use crate::image_processor::ImageBuffer;
 
-use crate::generator::colour_source::EdgeBasedColourSource;
-use crate::generator::{Generator, Palette, Plate, PlateConfig};
+use crate::generator::{Generator, Palette, PlateConfig};
 
 fn main() {
     // The `launch` function is the main entry point for a dioxus app. It takes a component and renders it with the platform feature

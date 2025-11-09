@@ -1,5 +1,4 @@
 use super::kernel::Kernel;
-use dioxus::html::link::r#as;
 use image::GrayImage;
 use std::cmp::{Eq, PartialEq};
 use std::ops::{Add, Mul, Sub};

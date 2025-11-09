@@ -66,7 +66,7 @@ impl PoissonSampler {
             let mut found = false;
 
             for _ in 0..self.k {
-                let candidate = self.generate_point_in_annulus(&center);
+                let candidate = self.generate_point_in_annulus(center);
                 if self.is_valid_sample(&candidate) {
                     let new_index = self.sample_list.len() as i32;
                     self.insert_sample_into_grid(&candidate, new_index);

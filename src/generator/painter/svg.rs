@@ -37,11 +37,9 @@ fn setup_document(width: u32, height: u32) -> Document {
 }
 
 fn draw_circle(dot: Dot) -> Circle {
-    let circle = Circle::new()
+    Circle::new()
         .set("cx", dot.position.x)
         .set("cy", dot.position.y)
         .set("r", dot.size)
-        .set("fill", dot.color);
-
-    circle
+        .set("fill", dot.color)
 }

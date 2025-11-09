@@ -3,7 +3,7 @@ use crate::image_processor::{
     STRONG_EDGE, WEAK_EDGE,
 };
 
-use crate::image_processor::image_buffer::{GradientBuffer, GradientComponent, GradientData};
+use crate::image_processor::image_buffer::{GradientBuffer, GradientData};
 
 use std::collections::VecDeque;
 
@@ -43,8 +43,8 @@ impl ImageProcessorTrait for CrateImageProcessor {
 
         for y in 0..image.height {
             for x in 0..image.width {
-                let gx = gradient_x.get_pixel(x, y) as f32;
-                let gy = gradient_y.get_pixel(x, y) as f32;
+                let gx = gradient_x.get_pixel(x, y);
+                let gy = gradient_y.get_pixel(x, y);
 
                 let magnitude = (gx.powi(2) + gy.powi(2)).sqrt();
 
@@ -181,7 +181,7 @@ impl ImageProcessorTrait for CrateImageProcessor {
             self.double_threshold(&non_max_suppressed, LOW_THRESHOLD, HIGH_THRESHOLD);
         let edge_extended = self.edge_extension(&double_thresholded);
 
-        return edge_extended;
+        edge_extended
     }
 }
 
