@@ -43,31 +43,64 @@ impl Plate {
 
     pub fn fill_gaps(&mut self, attempts: usize, colour_source: &dyn ColourSource) {
         let mut rng = rand::rng();
-        let width = self.config.width;
-        let height = self.config.height;
 
         for _ in 0..attempts {
-            let x = rng.random_range(0.0..width as f32);
-            let y = rng.random_range(0.0..height as f32);
+            let position = self.random_position(&mut rng);
 
-            let new_size = self.config.random_dot_size() / 2;
-            let new_radius = new_size as f32 / 2.0;
+            // Find the maximum diameter that could fit at this position
+            if let Some(max_diameter) = self.max_dot_size_at(&position) {
+                // Generate a size respecting both random sizing AND physical constraints
+                let desired_size = self.config.random_dot_size();
+                let actual_size = desired_size.min(max_diameter);
 
-            if self.dots.iter().all(|dot| {
-                let existing_radius = dot.size as f32 / 2.0;
-                let distance = ((dot.position.x - x).powi(2) + (dot.position.y - y).powi(2)).sqrt();
-                // Ensure no overlap with a small safety margin
-                distance >= new_radius + existing_radius
-            }) {
-                let color = colour_source.sample_colour(x, y, new_size as f32);
-                self.dots.push(Dot {
-                    position: Point { x, y },
-                    size: new_size,
-                    color,
-                    shape: "circle".to_string(),
-                });
+                // Double-check it actually fits (should always pass now)
+                if self.can_place_dot_at(&position, actual_size) {
+                    let dot = self.create_dot(position, actual_size, colour_source);
+                    self.dots.push(dot);
+                }
             }
         }
+    }
+
+    /// Calculate the maximum dot diameter that can fit at a position without overlapping.
+    fn max_dot_size_at(&self, position: &Point) -> Option<u32> {
+        let spacing = self.config.spacing_multiplier;
+
+        // Find the closest existing dot
+        let min_distance_to_existing = self
+            .dots
+            .iter()
+            .map(|dot| {
+                let dist = Self::distance(&dot.position, position);
+                let existing_radius = dot.size as f32 / 2.0;
+                // Available radius = distance minus existing radius
+                dist - existing_radius
+            })
+            .min_by(|a, b| a.partial_cmp(b).unwrap())?;
+
+        // Convert to diameter, accounting for spacing
+        let max_radius = min_distance_to_existing / spacing;
+
+        if max_radius > 0.5 {
+            // At least 1px diameter
+            Some((max_radius * 2.0) as u32)
+        } else {
+            None
+        }
+    }
+
+    /// Check if a dot of given size can be placed at position without overlap.
+    fn can_place_dot_at(&self, position: &Point, new_dot_size: u32) -> bool {
+        let new_radius = new_dot_size as f32 / 2.0;
+        let spacing = self.config.spacing_multiplier;
+
+        self.dots.iter().all(|existing_dot| {
+            let existing_radius = existing_dot.size as f32 / 2.0;
+            let min_distance = (new_radius + existing_radius) * spacing;
+
+            let distance = Self::distance(&existing_dot.position, position);
+            distance >= min_distance
+        })
     }
 
     /// Calculate Euclidean distance between two points.
