@@ -1,0 +1,56 @@
+use super::{ControlGroup, SliderControl};
+use dioxus::prelude::*;
+
+#[component]
+pub fn ControlPanel(
+    mut dot_size: Signal<u32>,
+    size_jitter: Signal<f32>,
+    spacing_multiplier: Signal<f32>,
+) -> Element {
+    let dot_size_f32 = use_signal(|| dot_size() as f32);
+
+    // Sync f32 slider back to u32 signal
+    use_effect(move || {
+        let new_value = dot_size_f32() as u32;
+        if dot_size() != new_value {
+            dot_size.set(new_value);
+        }
+    });
+
+    rsx! {
+        aside {
+            style: "width: 300px; padding: 20px; background: white; border-right: 1px solid #ccc; overflow-y: auto;",
+
+            h2 { "Plate Controls" }
+
+            ControlGroup {
+                title: "Dot Sizing",
+                SliderControl {
+                    label: "Base Size",
+                    value: dot_size_f32,
+                    min: 5.0,
+                    max: 30.0,
+                    step: 1.0,
+                    precision: 0,
+                }
+                SliderControl {
+                    label: "Size Variation",
+                    value: size_jitter,
+                    min: 0.0,
+                    max: 1.0,
+                    step: 0.01,
+                }
+            }
+
+            ControlGroup {
+                title: "Spacing",
+                SliderControl {
+                    label: "Multiplier",
+                    value: spacing_multiplier,
+                    min: 0.5,
+                    max: 2.0,
+                }
+            }
+        }
+    }
+}

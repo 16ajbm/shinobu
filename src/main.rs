@@ -1,73 +1,59 @@
+mod components;
 mod generator;
 mod image_processor;
+mod server;
 
-use dioxus::html::geometry::euclid::num::Ceil;
-// The dioxus prelude contains a ton of common items used in dioxus apps. It's a good idea to import wherever you
-// need dioxus
 use dioxus::prelude::*;
 
-use crate::generator::poisson::{self, PoissonSampler};
-use crate::generator::{Generator, Palette, PlateConfig};
-use crate::image_processor::ImageBuffer;
+use crate::components::ControlPanel;
+use crate::server::generate_plate;
 
 fn main() {
-    // The `launch` function is the main entry point for a dioxus app. It takes a component and renders it with the platform feature
-    // you have enabled
     dioxus::launch(App);
 }
 
-/// App is the main component of our app. Components are the building blocks of dioxus apps. Each component is a function
-/// that takes some props and returns an Element. In this case, App takes no props because it is the root of our app.
-///
-/// Components should be annotated with `#[component]` to support props, better error messages, and autocomplete
 #[component]
 fn App() -> Element {
-    let svg = use_memo(move || {
-        let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let dot_size = use_signal(|| 10u32);
+    let size_jitter = use_signal(|| 0.3f32);
+    let spacing_multiplier = use_signal(|| 1.0f32);
 
-        let image_path = format!("{}/extras/seven.png", manifest_dir);
-
-        let edge_map: ImageBuffer<u8> = match ImageBuffer::from_file(&image_path) {
-            Ok(map) => {
-                println!(
-                    "Image: {}x{}, {} pixels",
-                    map.width,
-                    map.height,
-                    map.data.len()
-                );
-                map
-            }
-            Err(e) => {
-                println!("Failed to load image: {}", e);
-                panic!("Cannot continue without image");
-            }
-        };
-
-        let config = PlateConfig {
-            width: edge_map.width,
-            height: edge_map.height,
-            dot_size: 10,
-            size_jitter: 0.3,
-            spacing_multiplier: 1.0,
-            primary: Palette::red(),
-            secondary: Palette::green(),
-            background: None, // Not used
-        };
-
-        let mut sampler = PoissonSampler::new(
-            edge_map.width as f32,
-            edge_map.height as f32,
-            config.poisson_radius(),
-            30,
-        );
-        let points = sampler.generate_samples();
-
-        println!("Generated {} points", points.len());
-
-        Generator::new().generate_and_paint(points, &edge_map, config)
+    // Call server function when signals change
+    let svg_result = use_resource(move || async move {
+        generate_plate(dot_size(), size_jitter(), spacing_multiplier()).await
     });
 
     rsx! {
-        div { dangerous_inner_html: "{svg}" }
+        div {
+            style: "display: flex; height: 100vh; margin: 0;",
+
+            ControlPanel {
+                dot_size,
+                size_jitter,
+                spacing_multiplier,
+            }
+
+            match svg_result.read().as_ref() {
+                Some(Ok(svg_content)) => rsx! {
+                    div {
+                        style: "flex: 1; overflow: auto; background: #f0f0f0;",
+                        dangerous_inner_html: "{svg_content}"
+                    }
+                },
+                Some(Err(e)) => rsx! {
+                    div {
+                        style: "flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #d32f2f;",
+                        h2 { "Generation Error" }
+                        p { "{e}" }
+                    }
+                },
+                None => rsx! {
+                    div {
+                        style: "flex: 1; display: flex; align-items: center; justify-content: center;",
+                        "Generating plate..."
+                    }
+                }
+            }
+        }
     }
 }
