@@ -1,12 +1,14 @@
 mod components;
 mod generator;
 mod image_processor;
+
+#[cfg(feature = "fullstack")]
 mod server;
 
 use dioxus::prelude::*;
 
 use crate::components::ControlPanel;
-use crate::server::generate_plate;
+use crate::generator::create_plate;
 
 fn main() {
     dioxus::launch(App);
@@ -18,10 +20,8 @@ fn App() -> Element {
     let size_jitter = use_signal(|| 0.3f32);
     let spacing_multiplier = use_signal(|| 1.0f32);
 
-    // Call server function when signals change
-    let svg_result = use_resource(move || async move {
-        generate_plate(dot_size(), size_jitter(), spacing_multiplier()).await
-    });
+    let svg_result =
+        use_memo(move || create_plate(dot_size(), size_jitter(), spacing_multiplier()));
 
     rsx! {
         div {
@@ -33,24 +33,18 @@ fn App() -> Element {
                 spacing_multiplier,
             }
 
-            match svg_result.read().as_ref() {
-                Some(Ok(svg_content)) => rsx! {
+            match svg_result() {
+                Ok(svg_content) => rsx! {
                     div {
                         style: "flex: 1; overflow: auto; background: #f0f0f0;",
                         dangerous_inner_html: "{svg_content}"
                     }
                 },
-                Some(Err(e)) => rsx! {
+                Err(e) => rsx! {
                     div {
                         style: "flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #d32f2f;",
                         h2 { "Generation Error" }
                         p { "{e}" }
-                    }
-                },
-                None => rsx! {
-                    div {
-                        style: "flex: 1; display: flex; align-items: center; justify-content: center;",
-                        "Generating plate..."
                     }
                 }
             }
