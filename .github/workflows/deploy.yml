@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, deployment]  # TODO - remove deployment before merge
+    branches: [main]
   workflow_dispatch:
 
 permissions:
