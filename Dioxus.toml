@@ -5,6 +5,9 @@
 # HTML title tag content
 title = "shinobu"
 
+# Base path is needed for GitHub Pages
+base_path = "/shinobu"
+
 # include `assets` in web platform
 [web.resource]
 
