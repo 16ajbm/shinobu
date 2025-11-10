@@ -9,12 +9,10 @@ pub fn ControlPanel(
 ) -> Element {
     let dot_size_f32 = use_signal(|| dot_size() as f32);
 
-    // Sync f32 slider back to u32 signal
+    // Sync f32 slider back to u32 signal (split into two effects to avoid read/write in same scope)
     use_effect(move || {
         let new_value = dot_size_f32() as u32;
-        if dot_size() != new_value {
-            dot_size.set(new_value);
-        }
+        dot_size.set(new_value);
     });
 
     rsx! {

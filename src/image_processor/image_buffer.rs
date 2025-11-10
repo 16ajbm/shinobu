@@ -121,6 +121,27 @@ impl<T> ImageBuffer<T> {
         })
     }
 
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, Box<dyn std::error::Error>>
+    where
+        T: FromConvolve<f32> + Copy,
+    {
+        let img = image::load_from_memory(bytes)?;
+
+        let gray_img = img.to_luma8();
+
+        let (width, height) = gray_img.dimensions();
+
+        Ok(Self {
+            width,
+            height,
+            data: gray_img
+                .as_raw()
+                .iter()
+                .map(|&v| T::from_convolve(v as f32))
+                .collect(),
+        })
+    }
+
     pub fn manhattan_norm(&self) -> f64
     where
         T: Into<f64> + Copy,

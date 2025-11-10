@@ -14,6 +14,13 @@ pub use self::point::Point;
 
 pub type HexColour = String;
 
+const DEFAULT_IMAGE_BYTES: &[u8] =
+    include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/extras/seven.png"));
+
+pub fn load_default_edge_map() -> Result<ImageBuffer<u8>, String> {
+    ImageBuffer::from_bytes(DEFAULT_IMAGE_BYTES).map_err(|e| format!("Failed to load image: {}", e))
+}
+
 pub struct Generator {
     painter: Box<dyn painter::Painter>,
 }
@@ -58,12 +65,13 @@ impl Generator {
 }
 
 pub fn create_plate(
-    edge_map: &ImageBuffer<u8>,
     dot_size: u32,
     size_jitter: f32,
     spacing_multiplier: f32,
-) -> String {
+) -> Result<String, String> {
     use crate::generator::{poisson::PoissonSampler, Generator, Palette, PlateConfig};
+
+    let edge_map = load_default_edge_map()?;
 
     let config = PlateConfig {
         width: edge_map.width,
@@ -84,5 +92,5 @@ pub fn create_plate(
     );
     let points = sampler.generate_samples();
 
-    Generator::new().generate_and_paint(points, edge_map, config)
+    Ok(Generator::new().generate_and_paint(points, &edge_map, config))
 }
