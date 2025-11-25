@@ -1,5 +1,5 @@
 use crate::generator::HexColour;
-use crate::generator::Palette;
+use crate::palette::Palette;
 
 use rand::Rng;
 

@@ -1,10 +1,11 @@
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 
 use crate::generator::HexColour;
 
 const COLOURS_PER_PALETTE: usize = 6;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Palette {
     colors: [HexColour; COLOURS_PER_PALETTE],
 }

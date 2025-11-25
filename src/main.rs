@@ -1,6 +1,8 @@
 mod components;
 mod generator;
 mod image_processor;
+mod palette;
+mod utils;
 
 #[cfg(feature = "fullstack")]
 mod server;
