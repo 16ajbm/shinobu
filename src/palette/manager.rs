@@ -1,6 +1,7 @@
+use super::{Palette, PaletteEntry, PresetType};
 use crate::generator::HexColour;
-use crate::palette::{Palette, PaletteEntry, PresetType};
 
+#[allow(dead_code)] // Used in Step 2 storage layer
 pub struct PaletteManager;
 
 impl PaletteManager {
@@ -27,6 +28,60 @@ impl PaletteManager {
             Err("Palette name too long (max 50 characters)".to_string())
         } else {
             Ok(())
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use proptest::prelude::*;
+
+    #[test]
+    fn test_presets_are_valid() {
+        let presets = PaletteManager::presets();
+        assert_eq!(presets.len(), 2);
+
+        for preset in presets {
+            assert!(preset.is_preset);
+            assert!(preset.id.is_preset());
+        }
+    }
+
+    #[test]
+    fn test_create_custom() {
+        let manager = PaletteManager::new();
+        let colors = [
+            "#ff0000ff".to_string(),
+            "#ff1111ff".to_string(),
+            "#ff2222ff".to_string(),
+            "#ff3333ff".to_string(),
+            "#ff4444ff".to_string(),
+            "#ff5555ff".to_string(),
+        ];
+
+        let entry = manager.create_custom("My Custom".to_string(), colors);
+
+        assert_eq!(entry.name, "My Custom");
+        assert!(!entry.is_preset);
+        assert!(entry.id.is_custom());
+    }
+
+    proptest! {
+        #[test]
+        fn prop_validate_name_accepts_valid_lengths(s in "[a-zA-Z0-9][a-zA-Z0-9 ]{0,49}") {
+            // Must start with non-whitespace, 1-50 chars total
+            prop_assert!(PaletteManager::validate_name(&s).is_ok());
+        }
+
+        #[test]
+        fn prop_validate_name_rejects_too_long(s in "[a-zA-Z]{51,100}") {
+            prop_assert!(PaletteManager::validate_name(&s).is_err());
+        }
+
+        #[test]
+        fn prop_validate_name_rejects_whitespace_only(s in "[ \\t\\n]+") {
+            prop_assert!(PaletteManager::validate_name(&s).is_err());
         }
     }
 }

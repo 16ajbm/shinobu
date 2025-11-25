@@ -1,3 +1,4 @@
+#[allow(dead_code)] // Used by PaletteId::generate_custom
 pub fn current_timestamp_ms() -> u64 {
     #[cfg(target_arch = "wasm32")]
     {
