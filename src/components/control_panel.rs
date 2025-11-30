@@ -1,5 +1,7 @@
-use super::{ControlGroup, SliderControl};
+use super::{ControlGroup, PalettePreview, SliderControl};
 use dioxus::prelude::*;
+
+use crate::palette::Palette;
 
 #[component]
 pub fn ControlPanel(
@@ -22,6 +24,21 @@ pub fn ControlPanel(
             h2 {
                 style: "font-size: clamp(22px, 2.5vw, 28px); margin-bottom: 16px;",
                 "Plate Controls"
+            }
+
+            // Temporary: Test palette previews
+            ControlGroup {
+                title: "Palette Preview Test",
+                div {
+                    style: "margin-bottom: 8px;",
+                    p { style: "font-size: 14px; margin-bottom: 4px;", "Reds" }
+                    PalettePreview { palette: Palette::red() }
+                }
+                div {
+                    style: "margin-bottom: 8px;",
+                    p { style: "font-size: 14px; margin-bottom: 4px;", "Greens" }
+                    PalettePreview { palette: Palette::green() }
+                }
             }
 
             ControlGroup {
