@@ -232,7 +232,7 @@ mod tests {
         storage.save(&entry).unwrap();
 
         // Verify no .tmp files left behind
-        for file in fs::read_dir(temp.deref()).unwrap() {
+        for file in fs::read_dir(&*temp).unwrap() {
             let path = file.unwrap().path();
             assert_ne!(path.extension().and_then(|s| s.to_str()), Some("tmp"));
         }

@@ -5,9 +5,6 @@ pub mod image_processor;
 pub mod kernel;
 pub mod sobel_orientation;
 
-#[cfg(test)]
-pub mod test_utils;
-
 pub use self::image_buffer::{GrayScaleBuffer, ImageBuffer};
 pub use self::image_processor::{
     ImageProcessor, ImageProcessorTrait, NON_EDGE, STRONG_EDGE, WEAK_EDGE,
