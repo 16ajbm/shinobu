@@ -7,6 +7,8 @@ pub mod entry;
 pub mod id;
 pub mod manager;
 
+pub mod storage;
+
 pub use entry::PaletteEntry;
 // Used in Step 2 (storage layer)
 #[allow(unused_imports)]
