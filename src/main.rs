@@ -18,12 +18,18 @@ fn main() {
 
 #[component]
 fn App() -> Element {
+    use crate::palette::Palette;
+
     let dot_size = use_signal(|| 10u32);
     let size_jitter = use_signal(|| 0.3f32);
     let spacing_multiplier = use_signal(|| 1.0f32);
 
+    // Temporary: use preset palettes until UI is ready
+    let primary = Palette::red();
+    let secondary = Palette::green();
+
     let svg_result =
-        use_memo(move || create_plate(dot_size(), size_jitter(), spacing_multiplier()));
+        use_memo(move || create_plate(dot_size(), size_jitter(), spacing_multiplier(), &primary, &secondary));
 
     rsx! {
         div {

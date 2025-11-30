@@ -34,6 +34,10 @@ impl Palette {
         Self { colors: colours }
     }
 
+    pub fn colors(&self) -> &[HexColour; COLOURS_PER_PALETTE] {
+        &self.colors
+    }
+
     pub fn random_colour(&self) -> HexColour {
         let index = rand::rng().random_range(0..COLOURS_PER_PALETTE);
         self.colors[index].clone()
