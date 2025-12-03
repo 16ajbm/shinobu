@@ -1,13 +1,19 @@
-use super::{ControlGroup, PalettePreview, SliderControl};
+use super::{ControlGroup, PaletteEditor, PaletteList, PaletteSelector, SliderControl};
 use dioxus::prelude::*;
 
-use crate::palette::Palette;
+use crate::palette::PaletteEntry;
 
 #[component]
 pub fn ControlPanel(
     mut dot_size: Signal<u32>,
     size_jitter: Signal<f32>,
     spacing_multiplier: Signal<f32>,
+    primary_palette: Signal<PaletteEntry>,
+    secondary_palette: Signal<PaletteEntry>,
+    available_palettes: ReadOnlySignal<Vec<PaletteEntry>>,
+    on_palette_save: EventHandler<PaletteEntry>,
+    on_palette_delete: EventHandler<String>,
+    on_palette_export: EventHandler<PaletteEntry>,
 ) -> Element {
     let dot_size_f32 = use_signal(|| dot_size() as f32);
 
@@ -26,18 +32,17 @@ pub fn ControlPanel(
                 "Plate Controls"
             }
 
-            // Temporary: Test palette previews
             ControlGroup {
-                title: "Palette Preview Test",
-                div {
-                    style: "margin-bottom: 8px;",
-                    p { style: "font-size: 14px; margin-bottom: 4px;", "Reds" }
-                    PalettePreview { palette: Palette::red() }
+                title: "Color Palettes",
+                PaletteSelector {
+                    label: "Primary".to_string(),
+                    selected: primary_palette,
+                    options: available_palettes,
                 }
-                div {
-                    style: "margin-bottom: 8px;",
-                    p { style: "font-size: 14px; margin-bottom: 4px;", "Greens" }
-                    PalettePreview { palette: Palette::green() }
+                PaletteSelector {
+                    label: "Secondary (Edges)".to_string(),
+                    selected: secondary_palette,
+                    options: available_palettes,
                 }
             }
 
@@ -67,6 +72,25 @@ pub fn ControlPanel(
                     value: spacing_multiplier,
                     min: 0.5,
                     max: 2.0,
+                }
+            }
+
+            ControlGroup {
+                title: "Custom Palettes",
+                PaletteEditor {
+                    on_save: move |entry| on_palette_save.call(entry)
+                }
+                div {
+                    style: "margin-top: 16px;",
+                    p {
+                        style: "font-size: 13px; font-weight: 600; margin-bottom: 8px;",
+                        "Saved Custom Palettes"
+                    }
+                    PaletteList {
+                        palettes: available_palettes,
+                        on_delete: move |id| on_palette_delete.call(id),
+                        on_export: move |entry| on_palette_export.call(entry),
+                    }
                 }
             }
         }
