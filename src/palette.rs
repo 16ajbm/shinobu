@@ -4,12 +4,14 @@ use serde::{Deserialize, Serialize};
 use crate::generator::HexColour;
 
 pub mod entry;
+pub mod hooks;
 pub mod id;
 pub mod manager;
 
 pub mod storage;
 
 pub use entry::PaletteEntry;
+pub use hooks::use_persisted_palette;
 // Used in Step 2 (storage layer)
 #[allow(unused_imports)]
 pub use id::{PaletteId, PaletteIdType, PresetType};

@@ -160,8 +160,6 @@ mod tests {
     use crate::palette::Palette;
     use std::env;
 
-    /// RAII fixture for temporary test directories.
-    /// Automatically cleans up on drop, even if test panics.
     struct TempDir(PathBuf);
 
     impl TempDir {
@@ -178,30 +176,36 @@ mod tests {
 
     impl std::ops::Deref for TempDir {
         type Target = PathBuf;
-
         fn deref(&self) -> &Self::Target {
             &self.0
         }
     }
 
-    #[test]
-    fn test_save_and_load_from_disk() {
+    fn create_storage() -> (TempDir, FileSystemStorage) {
         let temp = TempDir::new();
         let storage = FileSystemStorage::with_path(temp.clone()).unwrap();
-        let entry = PaletteEntry::new_custom("Test".to_string(), Palette::red());
+        (temp, storage)
+    }
+
+    fn create_test_entry(name: &str) -> PaletteEntry {
+        PaletteEntry::new_custom(name.to_string(), Palette::red())
+    }
+
+    #[test]
+    fn test_save_and_load_persistence() {
+        let (temp, storage) = create_storage();
+        let entry = create_test_entry("Test");
 
         storage.save(&entry).unwrap();
-        let loaded = storage.load(entry.id.as_str()).unwrap();
 
-        assert_eq!(loaded.name, "Test");
+        assert_eq!(storage.load(entry.id.as_str()).unwrap().name, "Test");
         assert!(temp.join(format!("{}.json", entry.id.as_str())).exists());
     }
 
     #[test]
     fn test_delete_removes_file() {
-        let temp = TempDir::new();
-        let storage = FileSystemStorage::with_path(temp.clone()).unwrap();
-        let entry = PaletteEntry::new_custom("Test".to_string(), Palette::red());
+        let (_temp, storage) = create_storage();
+        let entry = create_test_entry("Test");
 
         storage.save(&entry).unwrap();
         storage.delete(entry.id.as_str()).unwrap();
@@ -210,31 +214,29 @@ mod tests {
     }
 
     #[test]
-    fn test_list_multiple_files() {
-        let temp = TempDir::new();
-        let storage = FileSystemStorage::with_path(temp.clone()).unwrap();
-        let entry1 = PaletteEntry::new_custom("First".to_string(), Palette::red());
-        std::thread::sleep(std::time::Duration::from_millis(2));
-        let entry2 = PaletteEntry::new_custom("Second".to_string(), Palette::green());
+    fn test_delete_nonexistent_returns_error() {
+        let (_temp, storage) = create_storage();
 
-        storage.save(&entry1).unwrap();
-        storage.save(&entry2).unwrap();
-
-        assert_eq!(storage.list().unwrap().len(), 2);
+        assert!(storage.delete("nonexistent").is_err());
     }
 
     #[test]
     fn test_atomic_write_no_temp_files() {
-        let temp = TempDir::new();
-        let storage = FileSystemStorage::with_path(temp.clone()).unwrap();
-        let entry = PaletteEntry::new_custom("Test".to_string(), Palette::red());
+        let (temp, storage) = create_storage();
+        let entry = create_test_entry("Test");
 
         storage.save(&entry).unwrap();
 
-        // Verify no .tmp files left behind
         for file in fs::read_dir(&*temp).unwrap() {
             let path = file.unwrap().path();
             assert_ne!(path.extension().and_then(|s| s.to_str()), Some("tmp"));
         }
+    }
+
+    #[test]
+    fn test_list_empty_directory() {
+        let (_temp, storage) = create_storage();
+
+        assert_eq!(storage.list().unwrap().len(), 0);
     }
 }

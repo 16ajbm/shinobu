@@ -9,9 +9,9 @@ mod server;
 
 use dioxus::prelude::*;
 
-use crate::components::ControlPanel;
+use crate::components::{ControlPanel, Toast, ToastContainer, ToastType};
 use crate::generator::create_plate;
-use crate::palette::{PaletteEntry, PaletteManager};
+use crate::palette::{use_persisted_palette, PaletteEntry, PaletteManager};
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::palette::storage::{FileSystemStorage, PaletteStorage};
@@ -33,7 +33,7 @@ fn App() -> Element {
     let spacing_multiplier = use_signal(|| 1.0f32);
 
     // Toast notification state
-    let mut toast_message = use_signal(|| None::<String>);
+    let mut toast = use_signal(|| None::<Toast>);
 
     // Initialize storage
     #[cfg(not(target_arch = "wasm32"))]
@@ -42,100 +42,41 @@ fn App() -> Element {
     #[cfg(target_arch = "wasm32")]
     let storage = use_signal(|| Some(LocalStorageAdapter::new()));
 
-    // Load available palettes (presets + saved custom palettes)
     let mut available_palettes = use_signal(move || {
-        let mut palettes = PaletteManager::presets();
-        if let Some(ref store) = storage() {
-            if let Ok(custom) = store.list() {
-                palettes.extend(custom);
-            }
-        }
-        palettes
+        storage()
+            .as_ref()
+            .map(|store| PaletteManager::load_all_palettes(store))
+            .unwrap_or_else(|| PaletteManager::presets())
     });
 
-    // Load persisted selected palettes or default to presets
-    let primary_palette = use_signal(move || {
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            // Native: Load from a config file or use preset
-            PaletteManager::presets()[0].clone()
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-            // Web: Try to load from localStorage
-            if let Some(window) = web_sys::window() {
-                if let Ok(Some(storage)) = window.local_storage() {
-                    if let Ok(Some(id)) = storage.get_item("shinobu_primary_palette") {
-                        if let Some(ref store) = storage() {
-                            if let Ok(entry) = store.load(&id) {
-                                return entry;
-                            }
-                        }
-                    }
-                }
-            }
-            PaletteManager::presets()[0].clone()
-        }
-    });
+    let presets = PaletteManager::presets();
 
-    let secondary_palette = use_signal(move || {
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            PaletteManager::presets()[1].clone()
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-            if let Some(window) = web_sys::window() {
-                if let Ok(Some(storage)) = window.local_storage() {
-                    if let Ok(Some(id)) = storage.get_item("shinobu_secondary_palette") {
-                        if let Some(ref store) = storage() {
-                            if let Ok(entry) = store.load(&id) {
-                                return entry;
-                            }
-                        }
-                    }
-                }
-            }
-            PaletteManager::presets()[1].clone()
-        }
-    });
+    let primary_palette = use_persisted_palette(
+        "shinobu_primary_palette",
+        storage,
+        presets[0].clone(),
+    );
 
-    // Persist palette selection changes
-    use_effect(move || {
-        #[cfg(target_arch = "wasm32")]
-        {
-            if let Some(window) = web_sys::window() {
-                if let Ok(Some(storage)) = window.local_storage() {
-                    let _ = storage.set_item("shinobu_primary_palette", primary_palette().id.as_str());
-                }
-            }
-        }
-    });
-
-    use_effect(move || {
-        #[cfg(target_arch = "wasm32")]
-        {
-            if let Some(window) = web_sys::window() {
-                if let Ok(Some(storage)) = window.local_storage() {
-                    let _ = storage.set_item("shinobu_secondary_palette", secondary_palette().id.as_str());
-                }
-            }
-        }
-    });
+    let secondary_palette = use_persisted_palette(
+        "shinobu_secondary_palette",
+        storage,
+        presets[1].clone(),
+    );
 
     // Handle saving new custom palettes
     let handle_palette_save = move |entry: PaletteEntry| {
         if let Some(ref store) = storage() {
             if store.save(&entry).is_ok() {
-                // Reload available palettes
-                let mut palettes = PaletteManager::presets();
-                if let Ok(custom) = store.list() {
-                    palettes.extend(custom);
-                }
-                available_palettes.set(palettes);
-                toast_message.set(Some(format!("✓ Palette '{}' saved!", entry.name)));
+                available_palettes.set(PaletteManager::load_all_palettes(store));
+                toast.set(Some(Toast {
+                    message: format!("Palette '{}' saved successfully!", entry.name),
+                    toast_type: ToastType::Success,
+                }));
             } else {
-                toast_message.set(Some("✗ Failed to save palette".to_string()));
+                toast.set(Some(Toast {
+                    message: "Failed to save palette".to_string(),
+                    toast_type: ToastType::Error,
+                }));
             }
         }
     };
@@ -144,15 +85,16 @@ fn App() -> Element {
     let handle_palette_delete = move |id: String| {
         if let Some(ref store) = storage() {
             if store.delete(&id).is_ok() {
-                // Reload available palettes
-                let mut palettes = PaletteManager::presets();
-                if let Ok(custom) = store.list() {
-                    palettes.extend(custom);
-                }
-                available_palettes.set(palettes);
-                toast_message.set(Some("✓ Palette deleted".to_string()));
+                available_palettes.set(PaletteManager::load_all_palettes(store));
+                toast.set(Some(Toast {
+                    message: "Palette deleted successfully".to_string(),
+                    toast_type: ToastType::Success,
+                }));
             } else {
-                toast_message.set(Some("✗ Failed to delete palette".to_string()));
+                toast.set(Some(Toast {
+                    message: "Failed to delete palette".to_string(),
+                    toast_type: ToastType::Error,
+                }));
             }
         }
     };
@@ -177,7 +119,10 @@ fn App() -> Element {
                                     anchor.set_download(&format!("{}.json", entry.name));
                                     let _ = anchor.click();
                                     web_sys::Url::revoke_object_url(&url).ok();
-                                    toast_message.set(Some(format!("✓ Exported '{}'", entry.name)));
+                                    toast.set(Some(Toast {
+                                        message: format!("Exported '{}' successfully", entry.name),
+                                        toast_type: ToastType::Success,
+                                    }));
                                 }
                             }
                         }
@@ -190,9 +135,15 @@ fn App() -> Element {
                 if let Some(home) = dirs::home_dir() {
                     let path = home.join("Downloads").join(format!("{}.json", entry.name));
                     if std::fs::write(&path, json).is_ok() {
-                        toast_message.set(Some(format!("✓ Exported to {:?}", path)));
+                        toast.set(Some(Toast {
+                            message: format!("Exported to Downloads/{}.json", entry.name),
+                            toast_type: ToastType::Success,
+                        }));
                     } else {
-                        toast_message.set(Some("✗ Failed to export".to_string()));
+                        toast.set(Some(Toast {
+                            message: "Failed to export palette".to_string(),
+                            toast_type: ToastType::Error,
+                        }));
                     }
                 }
             }
@@ -241,14 +192,8 @@ fn App() -> Element {
                 }
             }
 
-            // Toast notification (click to dismiss)
-            if let Some(message) = toast_message() {
-                div {
-                    style: "position: fixed; bottom: 20px; right: 20px; background: #323232; color: white; padding: 12px 20px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: 14px; z-index: 1000; cursor: pointer;",
-                    onclick: move |_| toast_message.set(None),
-                    "{message}"
-                }
-            }
+            // Toast notification with auto-dismiss
+            ToastContainer { toast }
         }
     }
 }

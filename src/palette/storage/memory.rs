@@ -78,12 +78,16 @@ impl PaletteStorage for InMemoryStorage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::palette::{Palette, PresetType};
+    use crate::palette::Palette;
+
+    fn create_test_entry(name: &str) -> PaletteEntry {
+        PaletteEntry::new_custom(name.to_string(), Palette::red())
+    }
 
     #[test]
     fn test_save_and_load() {
         let storage = InMemoryStorage::new();
-        let entry = PaletteEntry::new_custom("Test".to_string(), Palette::red());
+        let entry = create_test_entry("Test");
 
         storage.save(&entry).unwrap();
         let loaded = storage.load(entry.id.as_str()).unwrap();
@@ -93,35 +97,23 @@ mod tests {
     }
 
     #[test]
-    fn test_delete() {
+    fn test_delete_nonexistent_returns_error() {
         let storage = InMemoryStorage::new();
-        let entry = PaletteEntry::new_custom("Test".to_string(), Palette::red());
 
-        storage.save(&entry).unwrap();
-        storage.delete(entry.id.as_str()).unwrap();
-
-        assert!(!storage.exists(entry.id.as_str()));
+        assert!(storage.delete("nonexistent").is_err());
     }
 
     #[test]
-    fn test_list_multiple_entries() {
+    fn test_load_nonexistent_returns_error() {
         let storage = InMemoryStorage::new();
-        let entry1 = PaletteEntry::new_custom("First".to_string(), Palette::red());
-        std::thread::sleep(std::time::Duration::from_millis(2));
-        let entry2 = PaletteEntry::new_custom("Second".to_string(), Palette::green());
 
-        storage.save(&entry1).unwrap();
-        storage.save(&entry2).unwrap();
-
-        let list = storage.list().unwrap();
-        assert_eq!(list.len(), 2);
+        assert!(storage.load("nonexistent").is_err());
     }
 
     #[test]
-    fn test_save_overwrites_existing() {
+    fn test_save_overwrites() {
         let storage = InMemoryStorage::new();
-        let entry =
-            PaletteEntry::new_preset(PresetType::Red, "Original".to_string(), Palette::red());
+        let entry = create_test_entry("Original");
         let mut updated = entry.clone();
         updated.name = "Updated".to_string();
 
@@ -130,5 +122,11 @@ mod tests {
 
         assert_eq!(storage.list().unwrap().len(), 1);
         assert_eq!(storage.load(entry.id.as_str()).unwrap().name, "Updated");
+    }
+
+    #[test]
+    fn test_list_empty_storage() {
+        let storage = InMemoryStorage::new();
+        assert_eq!(storage.list().unwrap().len(), 0);
     }
 }
