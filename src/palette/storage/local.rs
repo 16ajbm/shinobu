@@ -1,8 +1,8 @@
-use wasm_bindgen::JsValue;
+use wasm_bindgen::{JsCast, JsValue};
 use web_sys::window;
 
 use super::{PaletteStorage, StorageError};
-use crate::palette::PaletteEntry;
+use crate::palette::Palette;
 
 /// LocalStorage-based storage for browser environments.
 /// Stores palettes in browser's localStorage with key prefix "shinobu_palette_".
@@ -40,11 +40,11 @@ impl Default for LocalStorageAdapter {
 }
 
 impl PaletteStorage for LocalStorageAdapter {
-    fn save(&self, entry: &PaletteEntry) -> Result<(), StorageError> {
+    fn save(&self, palette: &Palette) -> Result<(), StorageError> {
         let storage = self.get_storage()?;
-        let key = self.make_key(entry.id.as_str());
+        let key = self.make_key(&palette.name);
 
-        let json = serde_json::to_string(entry)
+        let json = serde_json::to_string(palette)
             .map_err(|e| StorageError::SerializationError(e.to_string()))?;
 
         storage.set_item(&key, &json).map_err(|e| {
@@ -60,25 +60,25 @@ impl PaletteStorage for LocalStorageAdapter {
         Ok(())
     }
 
-    fn load(&self, id: &str) -> Result<PaletteEntry, StorageError> {
+    fn load(&self, name: &str) -> Result<Palette, StorageError> {
         let storage = self.get_storage()?;
-        let key = self.make_key(id);
+        let key = self.make_key(name);
 
         let json = storage
             .get_item(&key)
             .map_err(|_| StorageError::PermissionDenied)?
-            .ok_or_else(|| StorageError::NotFound(id.to_string()))?;
+            .ok_or_else(|| StorageError::NotFound(name.to_string()))?;
 
         serde_json::from_str(&json).map_err(|e| StorageError::SerializationError(e.to_string()))
     }
 
-    fn delete(&self, id: &str) -> Result<(), StorageError> {
+    fn delete(&self, name: &str) -> Result<(), StorageError> {
         let storage = self.get_storage()?;
-        let key = self.make_key(id);
+        let key = self.make_key(name);
 
         // Check if exists first
-        if !self.exists(id) {
-            return Err(StorageError::NotFound(id.to_string()));
+        if !self.exists(name) {
+            return Err(StorageError::NotFound(name.to_string()));
         }
 
         storage
@@ -88,18 +88,18 @@ impl PaletteStorage for LocalStorageAdapter {
         Ok(())
     }
 
-    fn exists(&self, id: &str) -> bool {
+    fn exists(&self, name: &str) -> bool {
         if let Ok(storage) = self.get_storage() {
-            let key = self.make_key(id);
+            let key = self.make_key(name);
             storage.get_item(&key).ok().flatten().is_some()
         } else {
             false
         }
     }
 
-    fn list_ids(&self) -> Result<Vec<String>, StorageError> {
+    fn list_names(&self) -> Result<Vec<String>, StorageError> {
         let storage = self.get_storage()?;
-        let mut ids = Vec::new();
+        let mut names = Vec::new();
 
         let length = storage
             .length()
@@ -108,13 +108,28 @@ impl PaletteStorage for LocalStorageAdapter {
         for i in 0..length {
             if let Ok(Some(key)) = storage.key(i) {
                 if key.starts_with(&self.prefix) {
-                    // Strip prefix to get palette ID
-                    ids.push(key[self.prefix.len()..].to_string());
+                    // Strip prefix to get palette name
+                    names.push(key[self.prefix.len()..].to_string());
                 }
             }
         }
 
-        Ok(ids)
+        Ok(names)
+    }
+
+    fn list(&self) -> Result<Vec<Palette>, StorageError> {
+        let names = self.list_names()?;
+        let mut palettes = Vec::new();
+
+        for name in names {
+            match self.load(&name) {
+                Ok(palette) => palettes.push(palette),
+                Err(StorageError::NotFound(_)) => continue, // Skip missing palettes
+                Err(e) => return Err(e),
+            }
+        }
+
+        Ok(palettes)
     }
 }
 

@@ -4,6 +4,7 @@ mod generator;
 mod image_processor;
 mod palette;
 mod plate;
+mod services;
 mod utils;
 
 #[cfg(feature = "fullstack")]
@@ -15,18 +16,13 @@ use crate::components::{ControlPanel, Toast, ToastContainer, ToastType};
 use crate::config::PlateConfig;
 use crate::generator::create_plate;
 use crate::palette::{use_persisted_palette, Palette};
+use crate::services::create_export_service;
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::palette::storage::{FileSystemStorage, PaletteStorage};
 
 #[cfg(target_arch = "wasm32")]
 use crate::palette::storage::{LocalStorageAdapter, PaletteStorage};
-
-#[cfg(target_arch = "wasm32")]
-use web_sys;
-
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::JsCast;
 
 fn main() {
     dioxus::launch(App);
@@ -36,7 +32,6 @@ fn main() {
 fn App() -> Element {
     // Initialize with default config and preset palettes
     let presets = Palette::all_presets();
-
 
     // Toast notification state
     let mut toast = use_signal(|| None::<Toast>);
@@ -131,52 +126,19 @@ fn App() -> Element {
 
     // Handle exporting palette as JSON
     let handle_palette_export = move |palette: Palette| {
-        if let Ok(json) = serde_json::to_string_pretty(&palette) {
-            #[cfg(target_arch = "wasm32")]
-            {
-                // Browser: trigger download
-                if let Some(window) = web_sys::window() {
-                    if let Some(document) = window.document() {
-                        // Create a blob and download link
-                        let blob_parts = js_sys::Array::new();
-                        blob_parts.push(&wasm_bindgen::JsValue::from_str(&json));
-
-                        if let Ok(blob) = web_sys::Blob::new_with_str_sequence(&blob_parts) {
-                            if let Ok(url) = web_sys::Url::create_object_url_with_blob(&blob) {
-                                if let Ok(Some(element)) = document.create_element("a").ok() {
-                                    let anchor: web_sys::HtmlAnchorElement =
-                                        element.dyn_into().unwrap();
-                                    anchor.set_href(&url);
-                                    anchor.set_download(&format!("{}.json", palette.name));
-                                    let _ = anchor.click();
-                                    web_sys::Url::revoke_object_url(&url).ok();
-                                    toast.set(Some(Toast {
-                                        message: format!("Exported '{}' successfully", palette.name),
-                                        toast_type: ToastType::Success,
-                                    }));
-                                }
-                            }
-                        }
-                    }
-                }
+        let export_service = create_export_service();
+        match export_service.export_palette(&palette) {
+            Ok(message) => {
+                toast.set(Some(Toast {
+                    message,
+                    toast_type: ToastType::Success,
+                }));
             }
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                // Native: save to downloads or show dialog
-                if let Some(home) = dirs::home_dir() {
-                    let path = home.join("Downloads").join(format!("{}.json", palette.name));
-                    if std::fs::write(&path, json).is_ok() {
-                        toast.set(Some(Toast {
-                            message: format!("Exported to Downloads/{}.json", palette.name),
-                            toast_type: ToastType::Success,
-                        }));
-                    } else {
-                        toast.set(Some(Toast {
-                            message: "Failed to export palette".to_string(),
-                            toast_type: ToastType::Error,
-                        }));
-                    }
-                }
+            Err(error) => {
+                toast.set(Some(Toast {
+                    message: format!("Export failed: {}", error),
+                    toast_type: ToastType::Error,
+                }));
             }
         }
     };

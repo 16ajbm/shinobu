@@ -3,14 +3,12 @@ pub mod painter;
 pub mod point;
 pub mod poisson;
 
+pub use self::point::Point;
 use crate::config::PlateConfig;
 use crate::generator::colour_source::EdgeBasedColourSource;
 use crate::image_processor::ImageBuffer;
 use crate::palette::Palette;
 use crate::plate::{Dot, Plate};
-pub use self::point::Point;
-
-
 
 const DEFAULT_IMAGE_BYTES: &[u8] =
     include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/extras/seven.png"));

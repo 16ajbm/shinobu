@@ -137,16 +137,9 @@ pub fn PaletteEditor(on_save: EventHandler<Palette>) -> Element {
                         let palette = Palette::custom("Export".to_string(), colors());
                         let json = serde_json::to_string_pretty(&palette).unwrap_or_default();
 
-                        // Copy to clipboard (web only functionality, gracefully degrade on native)
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            use wasm_bindgen::JsValue;
-                            if let Some(window) = web_sys::window() {
-                                if let Ok(nav) = window.navigator().clipboard() {
-                                    let _ = nav.write_text(&json);
-                                }
-                            }
-                        }
+                        // Copy to clipboard (cross-platform service)
+                        let clipboard_service = crate::services::create_clipboard_service();
+                        let _ = clipboard_service.copy_text(&json);
 
                         #[cfg(not(target_arch = "wasm32"))]
                         {

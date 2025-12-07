@@ -23,8 +23,6 @@ pub enum PaletteError {
     NameAlreadyExists(String),
 }
 
-
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Palette {
     pub name: String,

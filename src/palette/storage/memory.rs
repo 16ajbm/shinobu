@@ -40,7 +40,9 @@ impl Default for InMemoryStorage {
 
 impl PaletteStorage for InMemoryStorage {
     fn save(&self, palette: &Palette) -> Result<(), StorageError> {
-        self.data.borrow_mut().insert(palette.name.clone(), palette.clone());
+        self.data
+            .borrow_mut()
+            .insert(palette.name.clone(), palette.clone());
         Ok(())
     }
 

@@ -72,6 +72,9 @@ pub trait PaletteStorage {
     /// Implementations can override this for more efficient bulk loading.
     fn list(&self) -> Result<Vec<Palette>, StorageError> {
         let names = self.list_names()?;
-        Ok(names.iter().filter_map(|name| self.load(name).ok()).collect())
+        Ok(names
+            .iter()
+            .filter_map(|name| self.load(name).ok())
+            .collect())
     }
 }

@@ -19,7 +19,7 @@ pub fn use_persisted_palette<S: PaletteStorage + 'static>(
             if let Some(window) = web_sys::window() {
                 if let Ok(Some(local_storage)) = window.local_storage() {
                     if let Ok(Some(name)) = local_storage.get_item(storage_key) {
-                        if let Some(ref store) = storage() {
+                        if let Some(ref store) = storage.read().as_ref() {
                             if let Ok(palette) = store.load(&name) {
                                 return palette;
                             }
@@ -36,13 +36,16 @@ pub fn use_persisted_palette<S: PaletteStorage + 'static>(
     });
 
     #[cfg(target_arch = "wasm32")]
-    use_effect(move || {
-        if let Some(window) = web_sys::window() {
-            if let Ok(Some(local_storage)) = window.local_storage() {
-                let _ = local_storage.set_item(storage_key, &palette().name);
+    {
+        let storage_key = storage_key.to_string();
+        use_effect(move || {
+            if let Some(window) = web_sys::window() {
+                if let Ok(Some(local_storage)) = window.local_storage() {
+                    let _ = local_storage.set_item(&storage_key, &palette().name);
+                }
             }
-        }
-    });
+        });
+    }
 
     palette
 }

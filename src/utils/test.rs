@@ -2,6 +2,11 @@ use proptest::prelude::*;
 
 use crate::image_processor::{GrayScaleBuffer, ImageBuffer};
 
+#[cfg(test)]
+use crate::palette::Palette;
+#[cfg(test)]
+use crate::services::{ClipboardService, ExportService};
+
 pub trait TestDataStrategy<T> {
     fn uniform() -> BoxedStrategy<T>;
     fn random() -> BoxedStrategy<T>;
@@ -94,5 +99,73 @@ impl TestDataStrategy<GrayScaleBuffer> for GrayScaleBuffer {
                 GrayScaleBuffer::new(width, height, data)
             })
             .boxed()
+    }
+}
+
+/// Mock export service for testing
+#[cfg(test)]
+pub struct MockExportService {
+    pub should_fail: bool,
+    pub captured_palettes: std::cell::RefCell<Vec<Palette>>,
+}
+
+#[cfg(test)]
+impl MockExportService {
+    pub fn new(should_fail: bool) -> Self {
+        Self {
+            should_fail,
+            captured_palettes: std::cell::RefCell::new(Vec::new()),
+        }
+    }
+
+    pub fn get_captured_palettes(&self) -> Vec<Palette> {
+        self.captured_palettes.borrow().clone()
+    }
+}
+
+#[cfg(test)]
+impl ExportService for MockExportService {
+    fn export_palette(&self, palette: &Palette) -> Result<String, String> {
+        self.captured_palettes.borrow_mut().push(palette.clone());
+
+        if self.should_fail {
+            Err("Mock export failure".to_string())
+        } else {
+            Ok(format!("Mock exported: {}", palette.name))
+        }
+    }
+}
+
+/// Mock clipboard service for testing
+#[cfg(test)]
+pub struct MockClipboardService {
+    pub should_fail: bool,
+    pub captured_text: std::cell::RefCell<Vec<String>>,
+}
+
+#[cfg(test)]
+impl MockClipboardService {
+    pub fn new(should_fail: bool) -> Self {
+        Self {
+            should_fail,
+            captured_text: std::cell::RefCell::new(Vec::new()),
+        }
+    }
+
+    pub fn get_captured_text(&self) -> Vec<String> {
+        self.captured_text.borrow().clone()
+    }
+}
+
+#[cfg(test)]
+impl ClipboardService for MockClipboardService {
+    fn copy_text(&self, text: &str) -> Result<(), String> {
+        self.captured_text.borrow_mut().push(text.to_string());
+
+        if self.should_fail {
+            Err("Mock clipboard failure".to_string())
+        } else {
+            Ok(())
+        }
     }
 }
