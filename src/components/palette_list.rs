@@ -37,20 +37,23 @@ pub fn PaletteList(
                         }
                         div {
                             style: "display: flex; gap: 6px;",
-                            button {
-                                style: "padding: 4px 12px; background: #2196f3; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;",
-                                onclick: {
-                                    let palette_clone = palette.clone();
-                                    move |_| on_export.call(palette_clone.clone())
-                                },
-                                "Export"
-                            }
-                            button {
-                                style: "padding: 4px 12px; background: #f44336; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;",
-                                onclick: move |_| {
-                                    on_delete.call(palette.name.clone());
-                                },
-                                "Delete"
+                            {
+                                let palette_for_export = palette.clone();
+                                let palette_name_for_delete = palette.name.clone();
+                                rsx! {
+                                    button {
+                                        style: "padding: 4px 12px; background: #2196f3; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;",
+                                        onclick: move |_| on_export.call(palette_for_export.clone()),
+                                        "Export"
+                                    }
+                                    button {
+                                        style: "padding: 4px 12px; background: #f44336; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;",
+                                        onclick: move |_| {
+                                            on_delete.call(palette_name_for_delete.clone());
+                                        },
+                                        "Delete"
+                                    }
+                                }
                             }
                         }
                     }

@@ -1,4 +1,4 @@
-use crate::generator::HexColour;
+use crate::config::HexColour;
 use crate::image_processor::{GrayScaleBuffer, STRONG_EDGE};
 use crate::palette::Palette;
 

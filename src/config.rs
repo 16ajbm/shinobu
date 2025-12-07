@@ -1,7 +1,7 @@
-use crate::generator::HexColour;
 use crate::palette::Palette;
-
 use rand::Rng;
+
+pub type HexColour = String;
 
 #[derive(Debug, Clone)]
 pub struct PlateConfig {

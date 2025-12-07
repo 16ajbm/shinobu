@@ -1,7 +1,9 @@
 mod components;
+mod config;
 mod generator;
 mod image_processor;
 mod palette;
+mod plate;
 mod utils;
 
 #[cfg(feature = "fullstack")]
@@ -10,6 +12,7 @@ mod server;
 use dioxus::prelude::*;
 
 use crate::components::{ControlPanel, Toast, ToastContainer, ToastType};
+use crate::config::PlateConfig;
 use crate::generator::create_plate;
 use crate::palette::{use_persisted_palette, Palette};
 
@@ -20,6 +23,9 @@ use crate::palette::storage::{FileSystemStorage, PaletteStorage};
 use crate::palette::storage::{LocalStorageAdapter, PaletteStorage};
 
 #[cfg(target_arch = "wasm32")]
+use web_sys;
+
+#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsCast;
 
 fn main() {
@@ -28,9 +34,9 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    let dot_size = use_signal(|| 10u32);
-    let size_jitter = use_signal(|| 0.3f32);
-    let spacing_multiplier = use_signal(|| 1.0f32);
+    // Initialize with default config and preset palettes
+    let presets = Palette::all_presets();
+
 
     // Toast notification state
     let mut toast = use_signal(|| None::<Toast>);
@@ -52,13 +58,32 @@ fn App() -> Element {
         palettes
     });
 
-    let presets = Palette::all_presets();
-
+    // Load persisted palettes
     let primary_palette =
         use_persisted_palette("shinobu_primary_palette", storage, presets[0].clone());
 
     let secondary_palette =
         use_persisted_palette("shinobu_secondary_palette", storage, presets[1].clone());
+
+    // Create config signal and sync with persisted palettes
+    let mut config = use_signal(|| PlateConfig {
+        width: 800,
+        height: 600,
+        dot_size: 10,
+        size_jitter: 0.3,
+        spacing_multiplier: 1.0,
+        primary: presets[0].clone(),
+        secondary: presets[1].clone(),
+        background: None,
+    });
+
+    // Update config when persisted palettes change
+    use_effect(move || {
+        config.with_mut(|c| {
+            c.primary = primary_palette();
+            c.secondary = secondary_palette();
+        });
+    });
 
     // Handle saving new custom palettes
     let handle_palette_save = move |palette: Palette| {
@@ -157,12 +182,13 @@ fn App() -> Element {
     };
 
     let svg_result = use_memo(move || {
+        let c = config();
         create_plate(
-            dot_size(),
-            size_jitter(),
-            spacing_multiplier(),
-            &primary_palette(),
-            &secondary_palette(),
+            c.dot_size,
+            c.size_jitter,
+            c.spacing_multiplier,
+            &c.primary,
+            &c.secondary,
         )
     });
 
@@ -171,9 +197,7 @@ fn App() -> Element {
             style: "display: flex; height: 100vh; margin: 0; position: relative;",
 
             ControlPanel {
-                dot_size,
-                size_jitter,
-                spacing_multiplier,
+                config,
                 primary_palette,
                 secondary_palette,
                 available_palettes,

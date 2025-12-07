@@ -1,26 +1,38 @@
 use super::{ControlGroup, PaletteEditor, PaletteList, PaletteSelector, SliderControl};
 use dioxus::prelude::*;
 
+use crate::config::PlateConfig;
 use crate::palette::Palette;
 
 #[component]
 pub fn ControlPanel(
-    mut dot_size: Signal<u32>,
-    size_jitter: Signal<f32>,
-    spacing_multiplier: Signal<f32>,
-    primary_palette: Signal<Palette>,
-    secondary_palette: Signal<Palette>,
+    mut config: Signal<PlateConfig>,
+    mut primary_palette: Signal<Palette>,
+    mut secondary_palette: Signal<Palette>,
     available_palettes: ReadOnlySignal<Vec<Palette>>,
     on_palette_save: EventHandler<Palette>,
     on_palette_delete: EventHandler<String>,
     on_palette_export: EventHandler<Palette>,
 ) -> Element {
-    let dot_size_f32 = use_signal(|| dot_size() as f32);
+    let dot_size_f32 = use_signal(|| config().dot_size as f32);
+    let size_jitter = use_signal(|| config().size_jitter);
+    let spacing_multiplier = use_signal(|| config().spacing_multiplier);
 
-    // Sync f32 slider back to u32 signal (split into two effects to avoid read/write in same scope)
+    // Sync config with palette changes
     use_effect(move || {
-        let new_value = dot_size_f32() as u32;
-        dot_size.set(new_value);
+        config.with_mut(|c| {
+            c.primary = primary_palette();
+            c.secondary = secondary_palette();
+        });
+    });
+
+    // Sync changes back to config and palette signals
+    use_effect(move || {
+        config.with_mut(|c| {
+            c.dot_size = dot_size_f32() as u32;
+            c.size_jitter = size_jitter();
+            c.spacing_multiplier = spacing_multiplier();
+        });
     });
 
     rsx! {

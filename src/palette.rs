@@ -1,7 +1,7 @@
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::generator::HexColour;
+use crate::config::HexColour;
 
 pub mod hooks;
 pub mod storage;

@@ -1,10 +1,20 @@
 use rand::Rng;
 
+use crate::config::{PlateConfig, HexColour};
 use crate::generator::{
     colour_source::ColourSource,
-    plate::{config::PlateConfig, dot::Dot},
     point::Point,
 };
+
+/// Dots are the individual coloured elements that make up a plate. Although they are called "dots",
+/// they can come in a variety of shapes.
+#[derive(Debug, Clone)]
+pub struct Dot {
+    pub position: Point,
+    pub size: u32,
+    pub color: HexColour,
+    pub shape: String,
+}
 
 #[derive(Debug, Clone)]
 pub struct Plate {
