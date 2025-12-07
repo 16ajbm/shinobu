@@ -5,7 +5,7 @@ use crate::image_processor::{GrayScaleBuffer, ImageBuffer};
 #[cfg(test)]
 use crate::palette::Palette;
 #[cfg(test)]
-use crate::services::{ClipboardService, ExportService, ExportError, ClipboardError, ServiceError};
+use crate::services::{ClipboardError, ClipboardService, ExportError, ExportService, ServiceError};
 
 pub trait TestDataStrategy<T> {
     fn uniform() -> BoxedStrategy<T>;

@@ -10,7 +10,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(message) => {
             println!("✅ Export successful: {}", message);
         }
-        Err(ExportError::ExportFailed { palette_name, source }) => {
+        Err(ExportError::ExportFailed {
+            palette_name,
+            source,
+        }) => {
             println!("❌ Export failed for '{}': {}", palette_name, source);
 
             // Pattern match on the underlying service error for specific handling

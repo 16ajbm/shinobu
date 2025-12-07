@@ -1,5 +1,5 @@
 use crate::palette::Palette;
-use crate::services::{ClipboardService, ExportService, ExportError, ClipboardError, ServiceError};
+use crate::services::{ClipboardError, ClipboardService, ExportError, ExportService, ServiceError};
 use std::fs;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -8,8 +8,8 @@ pub struct NativeExportService;
 #[cfg(not(target_arch = "wasm32"))]
 impl ExportService for NativeExportService {
     fn export_palette(&self, palette: &Palette) -> Result<String, ExportError> {
-        let json = serde_json::to_string_pretty(palette)
-            .map_err(|e| ExportError::ExportFailed {
+        let json =
+            serde_json::to_string_pretty(palette).map_err(|e| ExportError::ExportFailed {
                 palette_name: palette.name.clone(),
                 source: ServiceError::Serialization(e.to_string()),
             })?;
@@ -41,7 +41,9 @@ impl ClipboardService for NativeClipboardService {
         // Could integrate with a clipboard crate like `clipboard` or `arboard`
         // For now, just indicate it's not supported
         Err(ClipboardError::CopyFailed {
-            source: ServiceError::Unsupported("Clipboard not supported on native platform".to_string()),
+            source: ServiceError::Unsupported(
+                "Clipboard not supported on native platform".to_string(),
+            ),
         })
     }
 }

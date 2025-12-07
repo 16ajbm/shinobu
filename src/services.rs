@@ -127,7 +127,7 @@ mod tests {
         let error = result.unwrap_err();
         assert!(matches!(error, ExportError::ExportFailed { .. }));
         assert!(error.to_string().contains("Green")); // Check palette name in error
-        // Should still capture the palette even on failure
+                                                      // Should still capture the palette even on failure
         assert_eq!(service.get_captured_palettes().len(), 1);
     }
 

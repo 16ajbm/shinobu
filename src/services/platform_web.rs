@@ -5,7 +5,7 @@ use wasm_bindgen::JsCast;
 use web_sys;
 
 use crate::palette::Palette;
-use crate::services::{ClipboardService, ExportService, ExportError, ClipboardError, ServiceError};
+use crate::services::{ClipboardError, ClipboardService, ExportError, ExportService, ServiceError};
 
 #[cfg(target_arch = "wasm32")]
 pub struct WebExportService;
@@ -13,8 +13,8 @@ pub struct WebExportService;
 #[cfg(target_arch = "wasm32")]
 impl ExportService for WebExportService {
     fn export_palette(&self, palette: &Palette) -> Result<String, ExportError> {
-        let json = serde_json::to_string_pretty(palette)
-            .map_err(|e| ExportError::ExportFailed {
+        let json =
+            serde_json::to_string_pretty(palette).map_err(|e| ExportError::ExportFailed {
                 palette_name: palette.name.clone(),
                 source: ServiceError::Serialization(e.to_string()),
             })?;
@@ -27,11 +27,12 @@ impl ExportService for WebExportService {
                 if let Ok(blob) = web_sys::Blob::new_with_str_sequence(&blob_parts) {
                     if let Ok(url) = web_sys::Url::create_object_url_with_blob(&blob) {
                         if let Ok(element) = document.create_element("a") {
-                            let anchor: web_sys::HtmlAnchorElement = element
-                                .dyn_into()
-                                .map_err(|_| ExportError::ExportFailed {
+                            let anchor: web_sys::HtmlAnchorElement =
+                                element.dyn_into().map_err(|_| ExportError::ExportFailed {
                                     palette_name: palette.name.clone(),
-                                    source: ServiceError::Platform("Failed to create anchor element".to_string()),
+                                    source: ServiceError::Platform(
+                                        "Failed to create anchor element".to_string(),
+                                    ),
                                 })?;
                             anchor.set_href(&url);
                             anchor.set_download(&format!("{}.json", palette.name));
