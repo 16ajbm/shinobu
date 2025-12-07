@@ -53,7 +53,6 @@ pub trait ExportService {
 
 pub trait ClipboardService {
     fn copy_text(&self, text: &str) -> Result<(), ClipboardError>;
-
 }
 
 pub fn create_export_service() -> Box<dyn ExportService> {
@@ -98,7 +97,7 @@ impl ServiceContainer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::test::{MockExportService, MockClipboardService};
+    use crate::utils::test::{MockClipboardService, MockExportService};
 
     #[test]
     fn test_export_service_success() {
@@ -125,7 +124,8 @@ mod tests {
         assert!(matches!(error, ExportError::ExportFailed { .. }));
         assert!(error.to_string().contains("Green"));
         assert_eq!(service.get_captured_palettes().len(), 1);
-    }    #[test]
+    }
+    #[test]
     fn test_clipboard_service_success() {
         let service = MockClipboardService::new(false);
         let text = "test clipboard content";

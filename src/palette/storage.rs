@@ -10,7 +10,6 @@ mod filesystem;
 #[cfg(target_arch = "wasm32")]
 mod local;
 
-
 #[cfg(not(target_arch = "wasm32"))]
 pub use filesystem::FileSystemStorage;
 
