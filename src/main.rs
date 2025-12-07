@@ -11,7 +11,7 @@ use dioxus::prelude::*;
 
 use crate::components::{ControlPanel, Toast, ToastContainer, ToastType};
 use crate::generator::create_plate;
-use crate::palette::{use_persisted_palette, PaletteEntry, PaletteManager};
+use crate::palette::{use_persisted_palette, Palette};
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::palette::storage::{FileSystemStorage, PaletteStorage};
@@ -43,33 +43,34 @@ fn App() -> Element {
     let storage = use_signal(|| Some(LocalStorageAdapter::new()));
 
     let mut available_palettes = use_signal(move || {
-        storage()
-            .as_ref()
-            .map(|store| PaletteManager::load_all_palettes(store))
-            .unwrap_or_else(|| PaletteManager::presets())
+        let mut palettes = Palette::all_presets();
+        if let Some(ref store) = storage() {
+            if let Ok(custom) = store.list() {
+                palettes.extend(custom);
+            }
+        }
+        palettes
     });
 
-    let presets = PaletteManager::presets();
+    let presets = Palette::all_presets();
 
-    let primary_palette = use_persisted_palette(
-        "shinobu_primary_palette",
-        storage,
-        presets[0].clone(),
-    );
+    let primary_palette =
+        use_persisted_palette("shinobu_primary_palette", storage, presets[0].clone());
 
-    let secondary_palette = use_persisted_palette(
-        "shinobu_secondary_palette",
-        storage,
-        presets[1].clone(),
-    );
+    let secondary_palette =
+        use_persisted_palette("shinobu_secondary_palette", storage, presets[1].clone());
 
     // Handle saving new custom palettes
-    let handle_palette_save = move |entry: PaletteEntry| {
+    let handle_palette_save = move |palette: Palette| {
         if let Some(ref store) = storage() {
-            if store.save(&entry).is_ok() {
-                available_palettes.set(PaletteManager::load_all_palettes(store));
+            if store.save(&palette).is_ok() {
+                let mut palettes = Palette::all_presets();
+                if let Ok(custom) = store.list() {
+                    palettes.extend(custom);
+                }
+                available_palettes.set(palettes);
                 toast.set(Some(Toast {
-                    message: format!("Palette '{}' saved successfully!", entry.name),
+                    message: format!("Palette '{}' saved successfully!", palette.name),
                     toast_type: ToastType::Success,
                 }));
             } else {
@@ -82,10 +83,14 @@ fn App() -> Element {
     };
 
     // Handle deleting custom palettes
-    let handle_palette_delete = move |id: String| {
+    let handle_palette_delete = move |name: String| {
         if let Some(ref store) = storage() {
-            if store.delete(&id).is_ok() {
-                available_palettes.set(PaletteManager::load_all_palettes(store));
+            if store.delete(&name).is_ok() {
+                let mut palettes = Palette::all_presets();
+                if let Ok(custom) = store.list() {
+                    palettes.extend(custom);
+                }
+                available_palettes.set(palettes);
                 toast.set(Some(Toast {
                     message: "Palette deleted successfully".to_string(),
                     toast_type: ToastType::Success,
@@ -100,8 +105,8 @@ fn App() -> Element {
     };
 
     // Handle exporting palette as JSON
-    let handle_palette_export = move |entry: PaletteEntry| {
-        if let Ok(json) = serde_json::to_string_pretty(&entry) {
+    let handle_palette_export = move |palette: Palette| {
+        if let Ok(json) = serde_json::to_string_pretty(&palette) {
             #[cfg(target_arch = "wasm32")]
             {
                 // Browser: trigger download
@@ -114,13 +119,14 @@ fn App() -> Element {
                         if let Ok(blob) = web_sys::Blob::new_with_str_sequence(&blob_parts) {
                             if let Ok(url) = web_sys::Url::create_object_url_with_blob(&blob) {
                                 if let Ok(Some(element)) = document.create_element("a").ok() {
-                                    let anchor: web_sys::HtmlAnchorElement = element.dyn_into().unwrap();
+                                    let anchor: web_sys::HtmlAnchorElement =
+                                        element.dyn_into().unwrap();
                                     anchor.set_href(&url);
-                                    anchor.set_download(&format!("{}.json", entry.name));
+                                    anchor.set_download(&format!("{}.json", palette.name));
                                     let _ = anchor.click();
                                     web_sys::Url::revoke_object_url(&url).ok();
                                     toast.set(Some(Toast {
-                                        message: format!("Exported '{}' successfully", entry.name),
+                                        message: format!("Exported '{}' successfully", palette.name),
                                         toast_type: ToastType::Success,
                                     }));
                                 }
@@ -133,10 +139,10 @@ fn App() -> Element {
             {
                 // Native: save to downloads or show dialog
                 if let Some(home) = dirs::home_dir() {
-                    let path = home.join("Downloads").join(format!("{}.json", entry.name));
+                    let path = home.join("Downloads").join(format!("{}.json", palette.name));
                     if std::fs::write(&path, json).is_ok() {
                         toast.set(Some(Toast {
-                            message: format!("Exported to Downloads/{}.json", entry.name),
+                            message: format!("Exported to Downloads/{}.json", palette.name),
                             toast_type: ToastType::Success,
                         }));
                     } else {
@@ -155,8 +161,8 @@ fn App() -> Element {
             dot_size(),
             size_jitter(),
             spacing_multiplier(),
-            &primary_palette().palette,
-            &secondary_palette().palette,
+            &primary_palette(),
+            &secondary_palette(),
         )
     });
 

@@ -1,19 +1,19 @@
 use super::{ControlGroup, PaletteEditor, PaletteList, PaletteSelector, SliderControl};
 use dioxus::prelude::*;
 
-use crate::palette::PaletteEntry;
+use crate::palette::Palette;
 
 #[component]
 pub fn ControlPanel(
     mut dot_size: Signal<u32>,
     size_jitter: Signal<f32>,
     spacing_multiplier: Signal<f32>,
-    primary_palette: Signal<PaletteEntry>,
-    secondary_palette: Signal<PaletteEntry>,
-    available_palettes: ReadOnlySignal<Vec<PaletteEntry>>,
-    on_palette_save: EventHandler<PaletteEntry>,
+    primary_palette: Signal<Palette>,
+    secondary_palette: Signal<Palette>,
+    available_palettes: ReadOnlySignal<Vec<Palette>>,
+    on_palette_save: EventHandler<Palette>,
     on_palette_delete: EventHandler<String>,
-    on_palette_export: EventHandler<PaletteEntry>,
+    on_palette_export: EventHandler<Palette>,
 ) -> Element {
     let dot_size_f32 = use_signal(|| dot_size() as f32);
 
@@ -78,7 +78,7 @@ pub fn ControlPanel(
             ControlGroup {
                 title: "Custom Palettes",
                 PaletteEditor {
-                    on_save: move |entry| on_palette_save.call(entry)
+                    on_save: move |palette| on_palette_save.call(palette)
                 }
                 div {
                     style: "margin-top: 16px;",
@@ -88,8 +88,8 @@ pub fn ControlPanel(
                     }
                     PaletteList {
                         palettes: available_palettes,
-                        on_delete: move |id| on_palette_delete.call(id),
-                        on_export: move |entry| on_palette_export.call(entry),
+                        on_delete: move |name| on_palette_delete.call(name),
+                        on_export: move |palette| on_palette_export.call(palette),
                     }
                 }
             }

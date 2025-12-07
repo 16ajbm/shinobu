@@ -1,14 +1,14 @@
 use dioxus::prelude::*;
 
-use crate::palette::PaletteEntry;
+use crate::palette::Palette;
 
 use super::PalettePreview;
 
 #[component]
 pub fn PaletteSelector(
     label: String,
-    selected: Signal<PaletteEntry>,
-    options: ReadOnlySignal<Vec<PaletteEntry>>,
+    selected: Signal<Palette>,
+    options: ReadOnlySignal<Vec<Palette>>,
 ) -> Element {
     rsx! {
         div {
@@ -26,23 +26,23 @@ pub fn PaletteSelector(
                     style: "font-size: 14px; margin-bottom: 6px; font-weight: 500;",
                     "{selected().name}"
                 }
-                PalettePreview { palette: selected().palette.clone() }
+                PalettePreview { palette: selected().clone() }
             }
 
             // Dropdown selector
             select {
                 style: "width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; cursor: pointer;",
-                value: "{selected().id.as_str()}",
+                value: "{selected().name}",
                 onchange: move |evt| {
-                    let selected_id = evt.value();
-                    if let Some(entry) = options().iter().find(|e| e.id.as_str() == selected_id) {
-                        selected.set(entry.clone());
+                    let selected_name = evt.value();
+                    if let Some(palette) = options().iter().find(|p| p.name == selected_name) {
+                        selected.set(palette.clone());
                     }
                 },
-                for entry in options() {
+                for palette in options() {
                     option {
-                        value: "{entry.id.as_str()}",
-                        "{entry.name}"
+                        value: "{palette.name}",
+                        "{palette.name}"
                     }
                 }
             }

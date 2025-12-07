@@ -2,7 +2,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use super::{PaletteStorage, StorageError};
-use crate::palette::PaletteEntry;
+use crate::palette::Palette;
 
 /// Filesystem-based storage using per-palette JSON files.
 /// Stores palettes in: ~/.config/shinobu/palettes/<id>.json
@@ -69,22 +69,22 @@ impl Default for FileSystemStorage {
 }
 
 impl PaletteStorage for FileSystemStorage {
-    fn save(&self, entry: &PaletteEntry) -> Result<(), StorageError> {
-        let path = self.palette_path(entry.id.as_str());
+    fn save(&self, palette: &Palette) -> Result<(), StorageError> {
+        let path = self.palette_path(&palette.name);
 
-        let json = serde_json::to_string_pretty(entry)
+        let json = serde_json::to_string_pretty(palette)
             .map_err(|e| StorageError::SerializationError(e.to_string()))?;
 
         self.atomic_write(&path, &json)?;
         Ok(())
     }
 
-    fn load(&self, id: &str) -> Result<PaletteEntry, StorageError> {
-        let path = self.palette_path(id);
+    fn load(&self, name: &str) -> Result<Palette, StorageError> {
+        let path = self.palette_path(name);
 
         let json = fs::read_to_string(&path).map_err(|e| {
             if e.kind() == std::io::ErrorKind::NotFound {
-                StorageError::NotFound(id.to_string())
+                StorageError::NotFound(name.to_string())
             } else {
                 StorageError::IoError(e.to_string())
             }
@@ -93,12 +93,12 @@ impl PaletteStorage for FileSystemStorage {
         serde_json::from_str(&json).map_err(|e| StorageError::SerializationError(e.to_string()))
     }
 
-    fn delete(&self, id: &str) -> Result<(), StorageError> {
-        let path = self.palette_path(id);
+    fn delete(&self, name: &str) -> Result<(), StorageError> {
+        let path = self.palette_path(name);
 
         fs::remove_file(&path).map_err(|e| {
             if e.kind() == std::io::ErrorKind::NotFound {
-                StorageError::NotFound(id.to_string())
+                StorageError::NotFound(name.to_string())
             } else {
                 StorageError::IoError(e.to_string())
             }
@@ -107,11 +107,11 @@ impl PaletteStorage for FileSystemStorage {
         Ok(())
     }
 
-    fn exists(&self, id: &str) -> bool {
-        self.palette_path(id).exists()
+    fn exists(&self, name: &str) -> bool {
+        self.palette_path(name).exists()
     }
 
-    fn list_ids(&self) -> Result<Vec<String>, StorageError> {
+    fn list_names(&self) -> Result<Vec<String>, StorageError> {
         let dir_entries = fs::read_dir(&self.base_path).map_err(|e| {
             if e.kind() == std::io::ErrorKind::NotFound {
                 // Directory doesn't exist yet - return empty list
@@ -187,30 +187,30 @@ mod tests {
         (temp, storage)
     }
 
-    fn create_test_entry(name: &str) -> PaletteEntry {
-        PaletteEntry::new_custom(name.to_string(), Palette::red())
+    fn create_test_palette(name: &str) -> Palette {
+        Palette::custom(name.to_string(), Palette::red().colors)
     }
 
     #[test]
     fn test_save_and_load_persistence() {
         let (temp, storage) = create_storage();
-        let entry = create_test_entry("Test");
+        let palette = create_test_palette("Test");
 
-        storage.save(&entry).unwrap();
+        storage.save(&palette).unwrap();
 
-        assert_eq!(storage.load(entry.id.as_str()).unwrap().name, "Test");
-        assert!(temp.join(format!("{}.json", entry.id.as_str())).exists());
+        assert_eq!(storage.load(&palette.name).unwrap().name, "Test");
+        assert!(temp.join(format!("{}.json", palette.name)).exists());
     }
 
     #[test]
     fn test_delete_removes_file() {
         let (_temp, storage) = create_storage();
-        let entry = create_test_entry("Test");
+        let palette = create_test_palette("Test");
 
-        storage.save(&entry).unwrap();
-        storage.delete(entry.id.as_str()).unwrap();
+        storage.save(&palette).unwrap();
+        storage.delete(&palette.name).unwrap();
 
-        assert!(!storage.exists(entry.id.as_str()));
+        assert!(!storage.exists(&palette.name));
     }
 
     #[test]
@@ -223,9 +223,9 @@ mod tests {
     #[test]
     fn test_atomic_write_no_temp_files() {
         let (temp, storage) = create_storage();
-        let entry = create_test_entry("Test");
+        let palette = create_test_palette("Test");
 
-        storage.save(&entry).unwrap();
+        storage.save(&palette).unwrap();
 
         for file in fs::read_dir(&*temp).unwrap() {
             let path = file.unwrap().path();

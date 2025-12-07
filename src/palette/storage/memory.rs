@@ -2,14 +2,14 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 use super::{PaletteStorage, StorageError};
-use crate::palette::PaletteEntry;
+use crate::palette::Palette;
 
 /// In-memory storage implementation using HashMap.
 /// Data is not persisted - lost when the instance is dropped.
 /// Thread-safe for single-threaded use (uses RefCell for interior mutability).
 #[derive(Debug)]
 pub struct InMemoryStorage {
-    data: RefCell<HashMap<String, PaletteEntry>>,
+    data: RefCell<HashMap<String, Palette>>,
 }
 
 impl InMemoryStorage {
@@ -19,12 +19,12 @@ impl InMemoryStorage {
         }
     }
 
-    /// Create with pre-populated entries (useful for testing).
+    /// Create with pre-populated palettes (useful for testing).
     #[cfg(test)]
-    pub fn with_entries(entries: Vec<PaletteEntry>) -> Self {
+    pub fn with_palettes(palettes: Vec<Palette>) -> Self {
         let mut map = HashMap::new();
-        for entry in entries {
-            map.insert(entry.id.as_str().to_string(), entry);
+        for palette in palettes {
+            map.insert(palette.name.clone(), palette);
         }
         Self {
             data: RefCell::new(map),
@@ -39,38 +39,37 @@ impl Default for InMemoryStorage {
 }
 
 impl PaletteStorage for InMemoryStorage {
-    fn save(&self, entry: &PaletteEntry) -> Result<(), StorageError> {
-        let key = entry.id.as_str().to_string();
-        self.data.borrow_mut().insert(key, entry.clone());
+    fn save(&self, palette: &Palette) -> Result<(), StorageError> {
+        self.data.borrow_mut().insert(palette.name.clone(), palette.clone());
         Ok(())
     }
 
-    fn load(&self, id: &str) -> Result<PaletteEntry, StorageError> {
+    fn load(&self, name: &str) -> Result<Palette, StorageError> {
         self.data
             .borrow()
-            .get(id)
+            .get(name)
             .cloned()
-            .ok_or_else(|| StorageError::NotFound(id.to_string()))
+            .ok_or_else(|| StorageError::NotFound(name.to_string()))
     }
 
-    fn delete(&self, id: &str) -> Result<(), StorageError> {
+    fn delete(&self, name: &str) -> Result<(), StorageError> {
         self.data
             .borrow_mut()
-            .remove(id)
-            .ok_or_else(|| StorageError::NotFound(id.to_string()))?;
+            .remove(name)
+            .ok_or_else(|| StorageError::NotFound(name.to_string()))?;
         Ok(())
     }
 
-    fn exists(&self, id: &str) -> bool {
-        self.data.borrow().contains_key(id)
+    fn exists(&self, name: &str) -> bool {
+        self.data.borrow().contains_key(name)
     }
 
-    fn list_ids(&self) -> Result<Vec<String>, StorageError> {
+    fn list_names(&self) -> Result<Vec<String>, StorageError> {
         Ok(self.data.borrow().keys().cloned().collect())
     }
 
     // Override default implementation for efficiency - direct access to all values
-    fn list(&self) -> Result<Vec<PaletteEntry>, StorageError> {
+    fn list(&self) -> Result<Vec<Palette>, StorageError> {
         Ok(self.data.borrow().values().cloned().collect())
     }
 }
@@ -80,20 +79,20 @@ mod tests {
     use super::*;
     use crate::palette::Palette;
 
-    fn create_test_entry(name: &str) -> PaletteEntry {
-        PaletteEntry::new_custom(name.to_string(), Palette::red())
+    fn create_test_palette(name: &str) -> Palette {
+        Palette::custom(name.to_string(), Palette::red().colors)
     }
 
     #[test]
     fn test_save_and_load() {
         let storage = InMemoryStorage::new();
-        let entry = create_test_entry("Test");
+        let palette = create_test_palette("Test");
 
-        storage.save(&entry).unwrap();
-        let loaded = storage.load(entry.id.as_str()).unwrap();
+        storage.save(&palette).unwrap();
+        let loaded = storage.load(&palette.name).unwrap();
 
-        assert_eq!(loaded.id, entry.id);
-        assert_eq!(loaded.name, "Test");
+        assert_eq!(loaded.name, palette.name);
+        assert_eq!(loaded.colors, palette.colors);
     }
 
     #[test]
@@ -113,15 +112,15 @@ mod tests {
     #[test]
     fn test_save_overwrites() {
         let storage = InMemoryStorage::new();
-        let entry = create_test_entry("Original");
-        let mut updated = entry.clone();
-        updated.name = "Updated".to_string();
+        let palette = create_test_palette("Test");
+        let mut updated = palette.clone();
+        updated.colors[0] = "#ffffff".to_string();
 
-        storage.save(&entry).unwrap();
+        storage.save(&palette).unwrap();
         storage.save(&updated).unwrap();
 
         assert_eq!(storage.list().unwrap().len(), 1);
-        assert_eq!(storage.load(entry.id.as_str()).unwrap().name, "Updated");
+        assert_eq!(storage.load(&palette.name).unwrap().colors[0], "#ffffff");
     }
 
     #[test]

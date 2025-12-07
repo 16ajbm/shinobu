@@ -1,40 +1,38 @@
 use dioxus::prelude::*;
 
-use crate::palette::{Palette, PaletteEntry, PaletteManager};
+use crate::palette::Palette;
 
 use super::PalettePreview;
 
 #[component]
-pub fn PaletteEditor(
-    on_save: EventHandler<PaletteEntry>,
-) -> Element {
+pub fn PaletteEditor(on_save: EventHandler<Palette>) -> Element {
     let mut name = use_signal(|| String::new());
-    let mut colors = use_signal(|| [
-        "#d32f2fff".to_string(),
-        "#c62828ff".to_string(),
-        "#e53935ff".to_string(),
-        "#f44336ff".to_string(),
-        "#ef5350ff".to_string(),
-        "#e57373ff".to_string(),
-    ]);
+    let mut colors = use_signal(|| {
+        [
+            "#d32f2fff".to_string(),
+            "#c62828ff".to_string(),
+            "#e53935ff".to_string(),
+            "#f44336ff".to_string(),
+            "#ef5350ff".to_string(),
+            "#e57373ff".to_string(),
+        ]
+    });
     let mut validation_error = use_signal(|| None::<String>);
 
-    let current_palette = use_memo(move || Palette::from_colours(colors()));
+    let current_palette = use_memo(move || Palette::custom("Preview".to_string(), colors()));
 
     let handle_save = move |_| {
         let name_value = name();
 
         // Validate name
-        if let Err(err) = PaletteManager::validate_name(&name_value) {
+        if let Err(err) = Palette::validate_name(&name_value) {
             validation_error.set(Some(err));
             return;
         }
 
-        // Create and save entry
-        let palette = Palette::from_colours(colors());
-        let entry = PaletteEntry::new_custom(name_value, palette);
-
-        on_save.call(entry);
+        // Create and save palette
+        let palette = Palette::custom(name_value, colors());
+        on_save.call(palette);
 
         // Reset form
         name.set(String::new());
@@ -136,7 +134,7 @@ pub fn PaletteEditor(
                 button {
                     style: "padding: 10px; background: #2196f3; color: white; border: none; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer;",
                     onclick: move |_| {
-                        let palette = Palette::from_colours(colors());
+                        let palette = Palette::custom("Export".to_string(), colors());
                         let json = serde_json::to_string_pretty(&palette).unwrap_or_default();
 
                         // Copy to clipboard (web only functionality, gracefully degrade on native)

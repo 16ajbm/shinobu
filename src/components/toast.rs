@@ -38,7 +38,8 @@ impl ToastType {
     }
 }
 
-const TOAST_CONTAINER: &str = "position: fixed; top: 20px; right: 20px; z-index: 1000; animation: slideIn 0.3s ease-out;";
+const TOAST_CONTAINER: &str =
+    "position: fixed; top: 20px; right: 20px; z-index: 1000; animation: slideIn 0.3s ease-out;";
 const TOAST_BOX: &str = "color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 250px; max-width: 400px;";
 const TOAST_CONTENT: &str = "display: flex; justify-content: space-between; align-items: center;";
 const TOAST_MESSAGE: &str = "margin: 0; font-size: 14px; font-weight: 500;";

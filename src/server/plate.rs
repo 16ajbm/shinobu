@@ -15,7 +15,13 @@ pub async fn generate_plate(
     let primary = Palette::red();
     let secondary = Palette::green();
 
-    let svg = generator::create_plate(dot_size, size_jitter, spacing_multiplier, &primary, &secondary)?;
+    let svg = generator::create_plate(
+        dot_size,
+        size_jitter,
+        spacing_multiplier,
+        &primary,
+        &secondary,
+    )?;
 
     Ok(svg)
 }

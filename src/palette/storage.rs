@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::palette::PaletteEntry;
+use crate::palette::Palette;
 
 mod memory;
 
@@ -48,30 +48,30 @@ impl fmt::Display for StorageError {
 impl std::error::Error for StorageError {}
 
 /// Storage abstraction for palette persistence.
-/// Each palette is stored individually, keyed by its ID.
+/// Each palette is stored individually, keyed by its name.
 pub trait PaletteStorage {
-    /// Save a palette entry. Uses `entry.id` as the storage key.
-    fn save(&self, entry: &PaletteEntry) -> Result<(), StorageError>;
+    /// Save a palette. Uses `palette.name` as the storage key.
+    fn save(&self, palette: &Palette) -> Result<(), StorageError>;
 
-    /// Load a single palette entry by ID.
-    fn load(&self, id: &str) -> Result<PaletteEntry, StorageError>;
+    /// Load a single palette by name.
+    fn load(&self, name: &str) -> Result<Palette, StorageError>;
 
-    /// Delete a palette entry by ID.
-    fn delete(&self, id: &str) -> Result<(), StorageError>;
+    /// Delete a palette by name.
+    fn delete(&self, name: &str) -> Result<(), StorageError>;
 
     /// Check if a palette exists without loading it.
-    fn exists(&self, id: &str) -> bool;
+    fn exists(&self, name: &str) -> bool;
 
-    /// List all stored palette IDs.
-    /// Implementations should return just the IDs; the trait provides a default
-    /// list() implementation that loads full entries.
-    fn list_ids(&self) -> Result<Vec<String>, StorageError>;
+    /// List all stored palette names.
+    /// Implementations should return just the names; the trait provides a default
+    /// list() implementation that loads full palettes.
+    fn list_names(&self) -> Result<Vec<String>, StorageError>;
 
-    /// List all stored palette entries.
-    /// Default implementation loads each entry by ID, skipping any that fail to load.
+    /// List all stored palettes.
+    /// Default implementation loads each palette by name, skipping any that fail to load.
     /// Implementations can override this for more efficient bulk loading.
-    fn list(&self) -> Result<Vec<PaletteEntry>, StorageError> {
-        let ids = self.list_ids()?;
-        Ok(ids.iter().filter_map(|id| self.load(id).ok()).collect())
+    fn list(&self) -> Result<Vec<Palette>, StorageError> {
+        let names = self.list_names()?;
+        Ok(names.iter().filter_map(|name| self.load(name).ok()).collect())
     }
 }
