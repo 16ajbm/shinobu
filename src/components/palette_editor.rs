@@ -6,7 +6,7 @@ use super::PalettePreview;
 
 #[component]
 pub fn PaletteEditor(on_save: EventHandler<Palette>) -> Element {
-    let mut name = use_signal(|| String::new());
+    let mut name = use_signal(String::new);
     let mut colors = use_signal(|| {
         [
             "#d32f2fff".to_string(),

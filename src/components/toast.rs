@@ -55,7 +55,7 @@ fn use_auto_dismiss(toast: Signal<Option<Toast>>, duration: Duration) {
     use_effect(move || {
         let Some(_) = toast() else { return };
 
-        let mut toast_setter = toast.clone();
+        let mut toast_setter = toast;
 
         spawn(async move {
             async_std::task::sleep(duration).await;

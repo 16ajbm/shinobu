@@ -47,17 +47,15 @@ pub enum ClipboardError {
     },
 }
 
-/// Cross-platform export service
 pub trait ExportService {
     fn export_palette(&self, palette: &Palette) -> Result<String, ExportError>;
 }
 
-/// Cross-platform clipboard service
 pub trait ClipboardService {
     fn copy_text(&self, text: &str) -> Result<(), ClipboardError>;
+
 }
 
-// Public constructors that hide platform details
 pub fn create_export_service() -> Box<dyn ExportService> {
     #[cfg(target_arch = "wasm32")]
     return Box::new(platform_web::WebExportService);
@@ -74,7 +72,6 @@ pub fn create_clipboard_service() -> Box<dyn ClipboardService> {
     return Box::new(platform_native::NativeClipboardService);
 }
 
-/// Service container for dependency injection
 pub struct ServiceContainer {
     pub export_service: Box<dyn ExportService>,
     pub clipboard_service: Box<dyn ClipboardService>,
@@ -101,7 +98,7 @@ impl ServiceContainer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::test::{MockClipboardService, MockExportService};
+    use crate::utils::test::{MockExportService, MockClipboardService};
 
     #[test]
     fn test_export_service_success() {
@@ -126,12 +123,9 @@ mod tests {
         assert!(result.is_err());
         let error = result.unwrap_err();
         assert!(matches!(error, ExportError::ExportFailed { .. }));
-        assert!(error.to_string().contains("Green")); // Check palette name in error
-                                                      // Should still capture the palette even on failure
+        assert!(error.to_string().contains("Green"));
         assert_eq!(service.get_captured_palettes().len(), 1);
-    }
-
-    #[test]
+    }    #[test]
     fn test_clipboard_service_success() {
         let service = MockClipboardService::new(false);
         let text = "test clipboard content";
