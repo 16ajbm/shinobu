@@ -6,14 +6,55 @@ mod platform_web;
 #[cfg(not(target_arch = "wasm32"))]
 mod platform_native;
 
-/// Cross-platform export service
-pub trait ExportService {
-    fn export_palette(&self, palette: &Palette) -> Result<String, String>;
+/// Service layer errors following Rust error handling conventions
+#[derive(Debug, thiserror::Error)]
+pub enum ServiceError {
+    /// Serialization/deserialization errors
+    #[error("Serialization failed: {0}")]
+    Serialization(String),
+
+    /// Platform-specific errors (web APIs, native APIs)
+    #[error("Platform operation failed: {0}")]
+    Platform(String),
+
+    /// Network or I/O related errors
+    #[error("I/O operation failed: {0}")]
+    Io(String),
+
+    /// Feature not available on current platform
+    #[error("Feature not supported on this platform: {0}")]
+    Unsupported(String),
 }
 
-/// Cross-platform clipboard service  
+/// Export service errors with more specific context
+#[derive(Debug, thiserror::Error)]
+pub enum ExportError {
+    #[error("Failed to export palette '{palette_name}': {source}")]
+    ExportFailed {
+        palette_name: String,
+        #[source]
+        source: ServiceError,
+    },
+}
+
+/// Clipboard service errors with context
+#[derive(Debug, thiserror::Error)]
+pub enum ClipboardError {
+    #[error("Failed to copy text to clipboard: {source}")]
+    CopyFailed {
+        #[source]
+        source: ServiceError,
+    },
+}
+
+/// Cross-platform export service
+pub trait ExportService {
+    fn export_palette(&self, palette: &Palette) -> Result<String, ExportError>;
+}
+
+/// Cross-platform clipboard service
 pub trait ClipboardService {
-    fn copy_text(&self, text: &str) -> Result<(), String>;
+    fn copy_text(&self, text: &str) -> Result<(), ClipboardError>;
 }
 
 // Public constructors that hide platform details
@@ -83,7 +124,9 @@ mod tests {
         let result = service.export_palette(&palette);
 
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Mock export failure");
+        let error = result.unwrap_err();
+        assert!(matches!(error, ExportError::ExportFailed { .. }));
+        assert!(error.to_string().contains("Green")); // Check palette name in error
         // Should still capture the palette even on failure
         assert_eq!(service.get_captured_palettes().len(), 1);
     }
@@ -107,7 +150,9 @@ mod tests {
         let result = service.copy_text(text);
 
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Mock clipboard failure");
+        let error = result.unwrap_err();
+        assert!(matches!(error, ClipboardError::CopyFailed { .. }));
+        assert!(error.to_string().contains("clipboard failure"));
         // Should still capture the text even on failure
         assert_eq!(service.get_captured_text(), vec![text]);
     }

@@ -5,16 +5,19 @@ use wasm_bindgen::JsCast;
 use web_sys;
 
 use crate::palette::Palette;
-use crate::services::{ClipboardService, ExportService};
+use crate::services::{ClipboardService, ExportService, ExportError, ClipboardError, ServiceError};
 
 #[cfg(target_arch = "wasm32")]
 pub struct WebExportService;
 
 #[cfg(target_arch = "wasm32")]
 impl ExportService for WebExportService {
-    fn export_palette(&self, palette: &Palette) -> Result<String, String> {
+    fn export_palette(&self, palette: &Palette) -> Result<String, ExportError> {
         let json = serde_json::to_string_pretty(palette)
-            .map_err(|e| format!("Serialization failed: {}", e))?;
+            .map_err(|e| ExportError::ExportFailed {
+                palette_name: palette.name.clone(),
+                source: ServiceError::Serialization(e.to_string()),
+            })?;
 
         if let Some(window) = web_sys::window() {
             if let Some(document) = window.document() {
@@ -26,7 +29,10 @@ impl ExportService for WebExportService {
                         if let Ok(element) = document.create_element("a") {
                             let anchor: web_sys::HtmlAnchorElement = element
                                 .dyn_into()
-                                .map_err(|_| "Failed to create anchor element")?;
+                                .map_err(|_| ExportError::ExportFailed {
+                                    palette_name: palette.name.clone(),
+                                    source: ServiceError::Platform("Failed to create anchor element".to_string()),
+                                })?;
                             anchor.set_href(&url);
                             anchor.set_download(&format!("{}.json", palette.name));
                             let _ = anchor.click();
@@ -37,7 +43,10 @@ impl ExportService for WebExportService {
                 }
             }
         }
-        Err("Failed to trigger download".to_string())
+        Err(ExportError::ExportFailed {
+            palette_name: palette.name.clone(),
+            source: ServiceError::Platform("Failed to trigger download".to_string()),
+        })
     }
 }
 
@@ -46,14 +55,16 @@ pub struct WebClipboardService;
 
 #[cfg(target_arch = "wasm32")]
 impl ClipboardService for WebClipboardService {
-    fn copy_text(&self, text: &str) -> Result<(), String> {
+    fn copy_text(&self, text: &str) -> Result<(), ClipboardError> {
         if let Some(window) = web_sys::window() {
             let nav = window.navigator();
             let clipboard = nav.clipboard();
             let _ = clipboard.write_text(text);
             Ok(())
         } else {
-            Err("No window available".to_string())
+            Err(ClipboardError::CopyFailed {
+                source: ServiceError::Platform("No window available".to_string()),
+            })
         }
     }
 }

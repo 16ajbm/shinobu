@@ -5,7 +5,7 @@ use crate::image_processor::{GrayScaleBuffer, ImageBuffer};
 #[cfg(test)]
 use crate::palette::Palette;
 #[cfg(test)]
-use crate::services::{ClipboardService, ExportService};
+use crate::services::{ClipboardService, ExportService, ExportError, ClipboardError, ServiceError};
 
 pub trait TestDataStrategy<T> {
     fn uniform() -> BoxedStrategy<T>;
@@ -125,11 +125,14 @@ impl MockExportService {
 
 #[cfg(test)]
 impl ExportService for MockExportService {
-    fn export_palette(&self, palette: &Palette) -> Result<String, String> {
+    fn export_palette(&self, palette: &Palette) -> Result<String, ExportError> {
         self.captured_palettes.borrow_mut().push(palette.clone());
 
         if self.should_fail {
-            Err("Mock export failure".to_string())
+            Err(ExportError::ExportFailed {
+                palette_name: palette.name.clone(),
+                source: ServiceError::Platform("Mock export failure".to_string()),
+            })
         } else {
             Ok(format!("Mock exported: {}", palette.name))
         }
@@ -159,11 +162,13 @@ impl MockClipboardService {
 
 #[cfg(test)]
 impl ClipboardService for MockClipboardService {
-    fn copy_text(&self, text: &str) -> Result<(), String> {
+    fn copy_text(&self, text: &str) -> Result<(), ClipboardError> {
         self.captured_text.borrow_mut().push(text.to_string());
 
         if self.should_fail {
-            Err("Mock clipboard failure".to_string())
+            Err(ClipboardError::CopyFailed {
+                source: ServiceError::Platform("Mock clipboard failure".to_string()),
+            })
         } else {
             Ok(())
         }
