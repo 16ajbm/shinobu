@@ -1,4 +1,4 @@
-use super::{ControlGroup, SliderControl};
+use super::{ControlGroup, SliderControl, Switch};
 use dioxus::prelude::*;
 
 #[component]
@@ -23,11 +23,14 @@ pub fn ControlPanel(
                 style: "font-size: clamp(22px, 2.5vw, 28px); margin-bottom: 16px;",
                 "Plate Controls"
             }
-
+            
+            Switch {
+                title: "Enable Dot Sizing".to_string(),
+            }
             ControlGroup {
                 title: "Dot Sizing",
                 SliderControl {
-                    label: "Base Size",
+                    label: "Base Sizez",
                     value: dot_size_f32,
                     min: 5.0,
                     max: 30.0,
