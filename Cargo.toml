@@ -14,7 +14,7 @@ fullstack = ["dioxus/fullstack"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = { version = "0.6.0", features = ["router"] }
+dioxus = { version = "0.7.2", features = ["router"] }
 getrandom = { version = "0.3", features = ["wasm_js"] }
 image = "0.25.7"
 rand = "0.9.2"
