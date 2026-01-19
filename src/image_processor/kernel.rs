@@ -43,10 +43,8 @@ impl<T> Kernel<T> {
 
                 let distance_sq = (gx * gx + gy * gy) as f32;
 
-                let std_dev_sq = std_dev * std_dev;
-
-                let value = (1.0 / (2.0 * std::f32::consts::PI * std_dev_sq))
-                    * (-distance_sq / (2.0 * std_dev_sq)).exp();
+                let value = (1.0 / (2.0 * std::f32::consts::PI * std_dev.powi(2)))
+                    * (-distance_sq / (2.0 * std_dev.powi(2))).exp();
 
                 data.push(value);
             }

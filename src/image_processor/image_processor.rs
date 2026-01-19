@@ -37,5 +37,12 @@ pub trait ImageProcessorTrait {
     fn non_maximum_suppression(&self, gradient_buffer: &GradientBuffer) -> ImageBuffer<f32>;
     fn double_threshold(&self, image: &ImageBuffer<f32>, low: f32, high: f32) -> GrayScaleBuffer;
     fn edge_extension(&self, image: &GrayScaleBuffer) -> GrayScaleBuffer;
-    fn canny_edge_detection(&self, image: &GrayScaleBuffer) -> GrayScaleBuffer;
+    fn canny_edge_detection(
+        &self,
+        image: &GrayScaleBuffer,
+        kernel_size: usize,
+        std_dev: f32,
+        low_threshold: f32,
+        high_threshold: f32,
+    ) -> GrayScaleBuffer;
 }

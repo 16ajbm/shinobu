@@ -46,7 +46,7 @@ fn App() -> Element {
     let buffer = image_processor::ImageBuffer::from(&gray_image);
 
     let processed_image =
-        image_processor::ImageProcessor::new(Box::new(image_processor::CrateImageProcessor))
+        image_processor::ImageProcessor::new(Box::new(image_processor::NaiveImageProcessor))
             .gaussian_blur(&buffer, 3, 4.0);
 
     let _: Result<(), _> = processed_image.to_u8().to_file("blurred.png".as_ref());

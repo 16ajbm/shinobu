@@ -7,14 +7,9 @@ use crate::image_processor::image_buffer::{GradientBuffer, GradientComponent, Gr
 
 use std::collections::VecDeque;
 
-const STD_DEV: f32 = 3.0;
-const KERNEL_SIZE: usize = 19;
-const LOW_THRESHOLD: f32 = 0.05 * 255.0;
-const HIGH_THRESHOLD: f32 = 0.50 * 255.0;
+pub struct NaiveImageProcessor;
 
-pub struct CrateImageProcessor;
-
-impl ImageProcessorTrait for CrateImageProcessor {
+impl ImageProcessorTrait for NaiveImageProcessor {
     fn gaussian_blur(
         &self,
         image: &GrayScaleBuffer,
@@ -126,7 +121,7 @@ impl ImageProcessorTrait for CrateImageProcessor {
         for y in 0..image.height {
             for x in 0..image.width {
                 let pixel_value = image.get_pixel(x, y);
-                if pixel_value == STRONG_EDGE || pixel_value == WEAK_EDGE {
+                if pixel_value == STRONG_EDGE {
                     queue.push_back((x, y));
                 }
             }
@@ -173,12 +168,19 @@ impl ImageProcessorTrait for CrateImageProcessor {
         GrayScaleBuffer::new(image.width, image.height, data)
     }
 
-    fn canny_edge_detection(&self, image: &GrayScaleBuffer) -> GrayScaleBuffer {
-        let blurred = self.gaussian_blur(image, KERNEL_SIZE, STD_DEV);
+    fn canny_edge_detection(
+        &self,
+        image: &GrayScaleBuffer,
+        kernel_size: usize,
+        std_dev: f32,
+        low_threshold: f32,
+        high_threshold: f32,
+    ) -> GrayScaleBuffer {
+        let blurred = self.gaussian_blur(image, kernel_size, std_dev);
         let gradient_buffer = self.compute_gradient(&blurred);
         let non_max_suppressed = self.non_maximum_suppression(&gradient_buffer);
         let double_thresholded =
-            self.double_threshold(&non_max_suppressed, LOW_THRESHOLD, HIGH_THRESHOLD);
+            self.double_threshold(&non_max_suppressed, low_threshold, high_threshold);
         let edge_extended = self.edge_extension(&double_thresholded);
 
         return edge_extended;
@@ -195,7 +197,7 @@ mod tests {
     proptest! {
         #[test]
         fn test_compute_gradient_magnitude_relationnship(buffer in ImageBuffer::<f32>::random()) {
-            let processor = CrateImageProcessor;
+            let processor = NaiveImageProcessor;
             let gradient_buffer = processor.compute_gradient(&buffer);
 
             for &pixel in gradient_buffer.data.iter() {
@@ -209,7 +211,7 @@ mod tests {
 
         #[test]
         fn test_compute_gradient_zero_property(buffer in ImageBuffer::<f32>::uniform()) {
-            let processor = CrateImageProcessor;
+            let processor = NaiveImageProcessor;
             let result = processor.compute_gradient(&buffer);
 
             for &pixel in result.data.iter() {
@@ -225,7 +227,7 @@ mod tests {
         ) {
             prop_assume!(low < high);
 
-            let processor = CrateImageProcessor;
+            let processor = NaiveImageProcessor;
             let result = processor.double_threshold(&buffer, low, high);
 
             for (input_val, &output_val) in buffer.data.iter().zip(result.data.iter()) {
@@ -241,7 +243,7 @@ mod tests {
 
         #[test]
         fn test_edge_extension_eliminates_weak_edges(buffer in GrayScaleBuffer::random()) {
-            let processor = CrateImageProcessor;
+            let processor = NaiveImageProcessor;
             let result = processor.edge_extension(&buffer);
 
             prop_assert!(result.data.iter().all(|&p| p != WEAK_EDGE));
@@ -249,7 +251,7 @@ mod tests {
 
         #[test]
         fn test_edge_extension_preserves_strong_edges(buffer in GrayScaleBuffer::random()) {
-            let processor = CrateImageProcessor;
+            let processor = NaiveImageProcessor;
             let result = processor.edge_extension(&buffer);
 
             for (input_val, &output_val) in buffer.data.iter().zip(result.data.iter()) {
@@ -261,7 +263,7 @@ mod tests {
 
         #[test]
         fn test_edge_extension_non_increasing(buffer in GrayScaleBuffer::random()) {
-            let processor = CrateImageProcessor;
+            let processor = NaiveImageProcessor;
 
             let input_edges = buffer.data.iter().filter(|&&p| p == STRONG_EDGE || p == WEAK_EDGE).count();
             let result = processor.edge_extension(&buffer);
@@ -272,7 +274,7 @@ mod tests {
 
         #[test]
         fn test_non_maximum_suppression_thinning(buffer in ImageBuffer::<f32>::random()) {
-            let processor = CrateImageProcessor;
+            let processor = NaiveImageProcessor;
             let gradient_buffer = processor.compute_gradient(&buffer);
             let suppressed = processor.non_maximum_suppression(&gradient_buffer);
 
@@ -294,7 +296,7 @@ mod tests {
         #[test]
         fn test_non_maximum_suppression_zero_gradient(buffer in ImageBuffer::<f32>::uniform())
         {
-            let processor = CrateImageProcessor;
+            let processor = NaiveImageProcessor;
             let gradient_buffer = processor.compute_gradient(&buffer);
             let suppressed = processor.non_maximum_suppression(&gradient_buffer);
 
