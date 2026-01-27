@@ -20,6 +20,7 @@ pub fn ControlPanel(
             style: "width: 25%; min-width: 280px; max-width: 600px; padding: 20px; background: white; border-right: 1px solid #ccc; overflow-y: auto; font-size: clamp(16px, 1.5vw, 20px);",
 
             h2 {
+                class: "red",
                 style: "font-size: clamp(22px, 2.5vw, 28px); margin-bottom: 16px;",
                 "Plate Controls"
             }
