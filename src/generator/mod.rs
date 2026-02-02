@@ -1,16 +1,14 @@
 pub mod colour_source;
 pub mod painter;
-pub mod palette;
-pub mod plate;
 pub mod point;
 pub mod poisson;
 
 use crate::generator::colour_source::EdgeBasedColourSource;
 use crate::image_processor::ImageBuffer;
 
-pub use self::palette::Palette;
-pub use self::plate::{Dot, Plate, PlateConfig};
 pub use self::point::Point;
+use crate::config::PlateConfig;
+use crate::plate::{Dot, Plate};
 
 pub type HexColour = String;
 
@@ -69,7 +67,9 @@ pub fn create_plate(
     size_jitter: f32,
     spacing_multiplier: f32,
 ) -> Result<String, String> {
-    use crate::generator::{poisson::PoissonSampler, Generator, Palette, PlateConfig};
+    use crate::config::PlateConfig;
+    use crate::generator::{poisson::PoissonSampler, Generator};
+    use crate::palette::Palette;
 
     let edge_map = load_default_edge_map()?;
 

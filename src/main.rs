@@ -1,6 +1,9 @@
 mod components;
+mod config;
 mod generator;
 mod image_processor;
+mod palette;
+mod plate;
 
 #[cfg(feature = "fullstack")]
 mod server;
@@ -27,31 +30,25 @@ fn App() -> Element {
 
     rsx! {
         document::Link { rel: "stylesheet", href: MAIN_CSS }
-        
-        div {
-            style: "display: flex; height: 100vh; margin: 0;",
 
-            ControlPanel {
-                dot_size,
-                size_jitter,
-                spacing_multiplier,
-            }
+        div { style: "display: flex; height: 100vh; margin: 0;",
+
+            ControlPanel { dot_size, size_jitter, spacing_multiplier }
 
             match svg_result() {
                 Ok(svg_content) => rsx! {
                     div {
                         style: "flex: 1; overflow: auto; background: #f0f0f0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;",
-                        dangerous_inner_html: "{svg_content}"
+                        dangerous_inner_html: "{svg_content}",
                     }
                 },
                 Err(e) => rsx! {
-                    div {
-                        style: "flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #d32f2f;",
+                    div { style: "flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #d32f2f;",
                         h2 { "Generation Error" }
                         p { "{e}" }
                     }
-                }
+                },
             }
         }
-    }   
+    }
 }
