@@ -1,3 +1,7 @@
+mod hooks;
+
+pub use hooks::use_persisted_palette;
+
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
