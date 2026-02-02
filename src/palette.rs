@@ -1,3 +1,7 @@
+mod hooks;
+
+pub use hooks::use_persisted_palette;
+
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -48,7 +52,7 @@ impl Palette {
 
     /// Get all built-in preset palettes
     pub fn all_presets() -> Vec<Self> {
-        vec![Self::red(), Self::green()]
+        vec![Self::red(), Self::green(), Self::greyscale()]
     }
 
     /// Check if this palette can be edited (only custom palettes)

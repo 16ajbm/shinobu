@@ -1,23 +1,39 @@
-use super::{ControlGroup, SliderControl};
+use super::{ControlGroup, PaletteSelector, SliderControl};
 use dioxus::prelude::*;
+
+use crate::config::PlateConfig;
+use crate::palette::Palette;
 
 #[component]
 pub fn ControlPanel(
-    mut dot_size: Signal<u32>,
-    size_jitter: Signal<f32>,
-    spacing_multiplier: Signal<f32>,
+    mut config: Signal<PlateConfig>,
+    primary_palette: Signal<Palette>,
+    secondary_palette: Signal<Palette>,
+    available_palettes: ReadOnlySignal<Vec<Palette>>,
 ) -> Element {
-    let dot_size_f32 = use_signal(|| dot_size() as f32);
+    let dot_size_f32 = use_signal(|| config().dot_size as f32);
+    let size_jitter = use_signal(|| config().size_jitter);
+    let spacing_multiplier = use_signal(|| config().spacing_multiplier);
 
-    // Sync f32 slider back to u32 signal (split into two effects to avoid read/write in same scope)
+    // Sync config with palette changes
     use_effect(move || {
-        let new_value = dot_size_f32() as u32;
-        dot_size.set(new_value);
+        config.with_mut(|c| {
+            c.primary = primary_palette();
+            c.secondary = secondary_palette();
+        });
+    });
+
+    // Sync changes back to config and palette signals
+    use_effect(move || {
+        config.with_mut(|c| {
+            c.dot_size = dot_size_f32() as u32;
+            c.size_jitter = size_jitter();
+            c.spacing_multiplier = spacing_multiplier();
+        });
     });
 
     rsx! {
-        aside {
-            class: "control-panel",
+        aside { class: "control-panel",
 
             h2 {
                 class: "red",
@@ -25,8 +41,20 @@ pub fn ControlPanel(
                 "Plate Controls"
             }
 
-            ControlGroup {
-                title: "Dot Sizing",
+            ControlGroup { title: "Color Palettes",
+                PaletteSelector {
+                    label: "Primary".to_string(),
+                    selected: primary_palette,
+                    options: available_palettes,
+                }
+                PaletteSelector {
+                    label: "Secondary (Edges)".to_string(),
+                    selected: secondary_palette,
+                    options: available_palettes,
+                }
+            }
+
+            ControlGroup { title: "Dot Sizing",
                 SliderControl {
                     label: "Base Size",
                     value: dot_size_f32,
@@ -44,8 +72,7 @@ pub fn ControlPanel(
                 }
             }
 
-            ControlGroup {
-                title: "Spacing",
+            ControlGroup { title: "Spacing",
                 SliderControl {
                     label: "Multiplier",
                     value: spacing_multiplier,
