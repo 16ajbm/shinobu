@@ -1,4 +1,4 @@
-use super::{ControlGroup, SliderControl};
+use super::{ControlGroup, SliderControl, ButtonControl};
 use dioxus::prelude::*;
 
 #[component]
@@ -53,6 +53,20 @@ pub fn ControlPanel(
                     value: spacing_multiplier,
                     min: 0.5,
                     max: 2.0,
+                }
+            }
+            ControlGroup {  
+                title: "Export Options",
+                ButtonControl {
+                    label: format!("Format: {}", export_format()),
+                    on_click: move |_| {
+                        let new_format = if export_format() == "SVG" {
+                            "PNG".to_string()
+                        } else {
+                            "SVG".to_string()
+                        };
+                        export_format.set(new_format);
+                    }
                 }
             }
         }

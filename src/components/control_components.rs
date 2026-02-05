@@ -1,6 +1,18 @@
 use dioxus::prelude::*;
 
 #[component]
+pub fn ButtonControl(label: String, on_click: EventHandler<()>) -> Element {
+    rsx! {
+        button {
+            class: "button-control",
+            style: "",
+            onclick: move |_| on_click(()),
+            "{label}"
+        }
+    }
+}
+
+#[component]
 pub fn SliderControl(
     label: String,
     value: Signal<f32>,
@@ -12,16 +24,15 @@ pub fn SliderControl(
     rsx! {
         div {
             class: "slider-control",
-            style: "margin-bottom: 16px;",
+            style: "",
             label {
                 class: "slider-label",
-                style: "display: block; margin-bottom: 8px; font-weight: 500; font-size: inherit;",
+                style: "",
                 "{label}: {value():.precision$}"
             }
             input {
                 r#type: "range",
                 class: "slider-input",
-                style: "width: 100%; height: 6px; cursor: pointer;",
                 min: "{min}",
                 max: "{max}",
                 step: "{step}",
