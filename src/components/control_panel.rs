@@ -17,7 +17,7 @@ pub fn ControlPanel(
 
     rsx! {
         aside {
-            style: "width: 25%; min-width: 280px; max-width: 600px; padding: 20px; background: white; border-right: 1px solid #ccc; overflow-y: auto; font-size: clamp(16px, 1.5vw, 20px);",
+            class: "control-panel",
 
             h2 {
                 class: "red",
