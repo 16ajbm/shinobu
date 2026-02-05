@@ -5,6 +5,7 @@ mod image_processor;
 #[cfg(feature = "fullstack")]
 mod server;
 
+use dioxus::html::u::exportparts;
 use dioxus::prelude::*;
 
 use crate::components::ControlPanel;
@@ -22,6 +23,11 @@ fn App() -> Element {
     let size_jitter = use_signal(|| 0.3f32);
     let spacing_multiplier = use_signal(|| 1.0f32);
 
+    let export_format = use_signal(|| "SVG".to_string());
+    let export_size = use_signal(|| "Original".to_string());
+    let export_color_space = use_signal(|| "sRGB".to_string());
+
+
     let svg_result =
         use_memo(move || create_plate(dot_size(), size_jitter(), spacing_multiplier()));
 
@@ -29,24 +35,27 @@ fn App() -> Element {
         document::Link { rel: "stylesheet", href: MAIN_CSS }
         
         div {
-            style: "display: flex; height: 100vh; margin: 0;",
+            class: "app-container",
 
             ControlPanel {
                 dot_size,
                 size_jitter,
                 spacing_multiplier,
+                export_format,
+                export_size,
+                export_color_space,
             }
 
             match svg_result() {
                 Ok(svg_content) => rsx! {
                     div {
-                        style: "flex: 1; overflow: auto; background: #f0f0f0;",
+                        class: "svg-container",
                         dangerous_inner_html: "{svg_content}"
                     }
                 },
                 Err(e) => rsx! {
                     div {
-                        style: "flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #d32f2f;",
+                        class:"error-message",
                         h2 { "Generation Error" }
                         p { "{e}" }
                     }

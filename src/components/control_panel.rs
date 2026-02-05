@@ -6,6 +6,9 @@ pub fn ControlPanel(
     mut dot_size: Signal<u32>,
     size_jitter: Signal<f32>,
     spacing_multiplier: Signal<f32>,
+    export_format: Signal<String>,
+    export_size: Signal<String>,
+    export_color_space: Signal<String>,
 ) -> Element {
     let dot_size_f32 = use_signal(|| dot_size() as f32);
 
@@ -20,8 +23,7 @@ pub fn ControlPanel(
             class: "control-panel",
 
             h2 {
-                class: "red",
-                style: "font-size: clamp(22px, 2.5vw, 28px); margin-bottom: 16px;",
+                class: "control-panel-title",
                 "Plate Controls"
             }
 
