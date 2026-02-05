@@ -10,6 +10,8 @@ use dioxus::prelude::*;
 use crate::components::ControlPanel;
 use crate::generator::create_plate;
 
+static MAIN_CSS: Asset = asset!("/assets/styling.css");
+
 fn main() {
     dioxus::launch(App);
 }
@@ -24,6 +26,8 @@ fn App() -> Element {
         use_memo(move || create_plate(dot_size(), size_jitter(), spacing_multiplier()));
 
     rsx! {
+        document::Link { rel: "stylesheet", href: MAIN_CSS }
+        
         div {
             style: "display: flex; height: 100vh; margin: 0;",
 
