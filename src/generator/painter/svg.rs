@@ -29,9 +29,11 @@ impl super::Painter for SvgPainter {
 
 fn setup_document(width: u32, height: u32) -> Document {
     Document::new()
-        .set("width", width)
-        .set("height", height)
+        .set("viewBox", (0, 0, width, height))
+        .set("width", "100%")
+        .set("height", "100%")
         .set("fill", "none")
+        .set("preserveAspectRatio", "xMidYMid meet")
 }
 
 fn draw_circle(dot: Dot) -> Circle {

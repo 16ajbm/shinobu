@@ -40,7 +40,7 @@ fn App() -> Element {
             match svg_result() {
                 Ok(svg_content) => rsx! {
                     div {
-                        style: "flex: 1; overflow: auto; background: #f0f0f0;",
+                        style: "flex: 1; overflow: auto; background: #f0f0f0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;",
                         dangerous_inner_html: "{svg_content}"
                     }
                 },
@@ -53,5 +53,5 @@ fn App() -> Element {
                 }
             }
         }
-    }
+    }   
 }
