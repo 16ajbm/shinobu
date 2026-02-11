@@ -1,18 +1,38 @@
-use super::{ControlGroup, SliderControl};
+use super::{ControlGroup, PaletteEditor, PaletteList, PaletteSelector, SliderControl};
 use dioxus::prelude::*;
+
+use crate::config::PlateConfig;
+use crate::palette::Palette;
 
 #[component]
 pub fn ControlPanel(
-    mut dot_size: Signal<u32>,
-    size_jitter: Signal<f32>,
-    spacing_multiplier: Signal<f32>,
+    mut config: Signal<PlateConfig>,
+    mut primary_palette: Signal<Palette>,
+    mut secondary_palette: Signal<Palette>,
+    available_palettes: ReadOnlySignal<Vec<Palette>>,
+    on_palette_save: EventHandler<Palette>,
+    on_palette_delete: EventHandler<String>,
+    on_palette_export: EventHandler<Palette>,
 ) -> Element {
-    let dot_size_f32 = use_signal(|| dot_size() as f32);
+    let dot_size_f32 = use_signal(|| config().dot_size as f32);
+    let size_jitter = use_signal(|| config().size_jitter);
+    let spacing_multiplier = use_signal(|| config().spacing_multiplier);
 
-    // Sync f32 slider back to u32 signal (split into two effects to avoid read/write in same scope)
+    // Sync config with palette changes
     use_effect(move || {
-        let new_value = dot_size_f32() as u32;
-        dot_size.set(new_value);
+        config.with_mut(|c| {
+            c.primary = primary_palette();
+            c.secondary = secondary_palette();
+        });
+    });
+
+    // Sync changes back to config and palette signals
+    use_effect(move || {
+        config.with_mut(|c| {
+            c.dot_size = dot_size_f32() as u32;
+            c.size_jitter = size_jitter();
+            c.spacing_multiplier = spacing_multiplier();
+        });
     });
 
     rsx! {
@@ -23,6 +43,20 @@ pub fn ControlPanel(
                 class: "red",
                 style: "font-size: clamp(22px, 2.5vw, 28px); margin-bottom: 16px;",
                 "Plate Controls"
+            }
+
+            ControlGroup {
+                title: "Color Palettes",
+                PaletteSelector {
+                    label: "Primary".to_string(),
+                    selected: primary_palette,
+                    options: available_palettes,
+                }
+                PaletteSelector {
+                    label: "Secondary (Edges)".to_string(),
+                    selected: secondary_palette,
+                    options: available_palettes,
+                }
             }
 
             ControlGroup {
@@ -51,6 +85,25 @@ pub fn ControlPanel(
                     value: spacing_multiplier,
                     min: 0.5,
                     max: 2.0,
+                }
+            }
+
+            ControlGroup {
+                title: "Custom Palettes",
+                PaletteEditor {
+                    on_save: move |palette| on_palette_save.call(palette)
+                }
+                div {
+                    style: "margin-top: 16px;",
+                    p {
+                        style: "font-size: 13px; font-weight: 600; margin-bottom: 8px;",
+                        "Saved Custom Palettes"
+                    }
+                    PaletteList {
+                        palettes: available_palettes,
+                        on_delete: move |name| on_palette_delete.call(name),
+                        on_export: move |palette| on_palette_export.call(palette),
+                    }
                 }
             }
         }

@@ -2,7 +2,7 @@ use svg::node::element::{Circle, Rectangle};
 use svg::Document;
 
 use crate::generator::Dot;
-use crate::generator::Plate;
+use crate::plate::Plate;
 
 pub struct SvgPainter;
 

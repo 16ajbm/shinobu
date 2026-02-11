@@ -1,18 +1,14 @@
 pub mod colour_source;
 pub mod painter;
-pub mod palette;
-pub mod plate;
 pub mod point;
 pub mod poisson;
 
+pub use self::point::Point;
+use crate::config::PlateConfig;
 use crate::generator::colour_source::EdgeBasedColourSource;
 use crate::image_processor::ImageBuffer;
-
-pub use self::palette::Palette;
-pub use self::plate::{Dot, Plate, PlateConfig};
-pub use self::point::Point;
-
-pub type HexColour = String;
+use crate::palette::Palette;
+use crate::plate::{Dot, Plate};
 
 const DEFAULT_IMAGE_BYTES: &[u8] =
     include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/extras/seven.png"));
@@ -68,8 +64,11 @@ pub fn create_plate(
     dot_size: u32,
     size_jitter: f32,
     spacing_multiplier: f32,
+    primary: &Palette,
+    secondary: &Palette,
 ) -> Result<String, String> {
-    use crate::generator::{poisson::PoissonSampler, Generator, Palette, PlateConfig};
+    use crate::config::PlateConfig;
+    use crate::generator::{poisson::PoissonSampler, Generator};
 
     let edge_map = load_default_edge_map()?;
 
@@ -79,8 +78,8 @@ pub fn create_plate(
         dot_size,
         size_jitter,
         spacing_multiplier,
-        primary: Palette::red(),
-        secondary: Palette::green(),
+        primary: primary.clone(),
+        secondary: secondary.clone(),
         background: None,
     };
 

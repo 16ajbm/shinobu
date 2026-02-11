@@ -178,9 +178,8 @@ impl ImageProcessorTrait for CrateImageProcessor {
         let non_max_suppressed = self.non_maximum_suppression(&gradient_buffer);
         let double_thresholded =
             self.double_threshold(&non_max_suppressed, LOW_THRESHOLD, HIGH_THRESHOLD);
-        let edge_extended = self.edge_extension(&double_thresholded);
 
-        edge_extended
+        self.edge_extension(&double_thresholded)
     }
 }
 
@@ -188,7 +187,7 @@ impl ImageProcessorTrait for CrateImageProcessor {
 mod tests {
     use super::*;
     use crate::image_processor::image_buffer::ApproxEq;
-    use crate::image_processor::test_utils::TestDataStrategy;
+    use crate::utils::test::TestDataStrategy;
     use proptest::prelude::*;
 
     proptest! {

@@ -1,6 +1,6 @@
-use crate::generator::palette::Palette;
-use crate::generator::HexColour;
+use crate::config::HexColour;
 use crate::image_processor::{GrayScaleBuffer, STRONG_EDGE};
+use crate::palette::Palette;
 
 pub trait ColourSource {
     fn sample_colour(&self, x: f32, y: f32, radius: f32) -> HexColour;

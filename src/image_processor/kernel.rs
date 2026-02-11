@@ -117,7 +117,7 @@ mod tests {
     use super::*;
 
     use crate::image_processor::image_buffer::{ApproxEq, GrayScaleBuffer, ImageBuffer};
-    use crate::image_processor::test_utils::TestDataStrategy;
+    use crate::utils::test::TestDataStrategy;
 
     use proptest::prelude::*;
 

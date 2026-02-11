@@ -9,9 +9,19 @@ pub async fn generate_plate(
     size_jitter: f32,
     spacing_multiplier: f32,
 ) -> Result<String, ServerFnError> {
-    let edge_map = load_edge_map()?;
+    use crate::palette::Palette;
 
-    let svg = generator::create_plate(&edge_map, dot_size, size_jitter, spacing_multiplier);
+    // Use default palettes for server-side generation
+    let primary = Palette::red();
+    let secondary = Palette::green();
+
+    let svg = generator::create_plate(
+        dot_size,
+        size_jitter,
+        spacing_multiplier,
+        &primary,
+        &secondary,
+    )?;
 
     Ok(svg)
 }
