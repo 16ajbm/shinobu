@@ -1,4 +1,5 @@
 mod hooks;
+pub mod storage;
 
 pub use hooks::use_persisted_palette;
 
