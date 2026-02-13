@@ -9,11 +9,8 @@ pub struct FileSystemStorage {
 }
 
 impl FileSystemStorage {
-    pub fn new(path: Option<impl AsRef<Path>>) -> Result<Self, StorageError> {
-        let base_path = match path {
-            Some(p) => p.as_ref().to_path_buf(),
-            None => Self::default_path()?,
-        };
+    pub fn new(base_path:  impl AsRef<Path>) -> Result<Self, StorageError> {
+        let base_path = base_path.as_ref().to_path_buf();
 
         fs::create_dir_all(&base_path)?;
 
@@ -21,21 +18,37 @@ impl FileSystemStorage {
     }
 
     pub fn default_path() -> Result<PathBuf, StorageError> {
-        let config_dir = dirs::config_dir().ok_or_else(|| StorageError::PermissionDenied("Could not determine config directory".to_string()))?;
+        let config_dir = dirs::config_dir().ok_or_else(|| {
+            StorageError::PermissionDenied("Could not determine config directory".to_string())
+        })?;
 
         Ok(config_dir.join("shinobu").join("palettes"))
     }
+
+    fn palette_path(&self, name: &str) -> PathBuf {
+        self.base_path.join(format!("{}.json", name))
+    }
+
+    // TODO - does atomic write (temp file + rename) actually benefit?
+    fn write(&self, path: &PathBuf, data: &str) -> Result<(), StorageError> {
+        fs::write(path, data)?;
+        Ok(())
 }
 
 impl Default for FileSystemStorage {
     fn default() -> Self {
-        Self::new(None).expect("Failed to initialize FileSystemStorage with default path")
+        Self::new(Self::default_path().expect("Failed to get default path"))
+            .expect("Failed to initialize FileSystemStorage with default path")
     }
 }
 
 impl PaletteStorage for FileSystemStorage {
     fn save(&self, palette: &Palette) -> Result<(), StorageError> {
-        todo!()
+        let path = self.palette_path(&palette.name);
+
+        let data = serde_json::to_string_pretty(palette)?;
+
+
     }
 
     fn delete(&self, name: &str) -> Result<(), StorageError> {

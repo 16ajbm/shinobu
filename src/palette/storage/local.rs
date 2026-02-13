@@ -1,5 +1,5 @@
 use wasm_bindgen::{JsCast, JsValue};
-use web_sys::window ;
+use web_sys::window;
 
 use super::{Palette, PaletteStorage, StorageError};
 
@@ -12,8 +12,6 @@ impl LocalStorage {
     pub fn new(key: String) -> Self {
         Self { key }
     }
-
-
 }
 
 impl Default for LocalStorage {

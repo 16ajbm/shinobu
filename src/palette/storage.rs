@@ -1,8 +1,8 @@
 use super::Palette;
 
-mod memory;
 mod filesystem;
 mod local;
+mod memory;
 
 trait PaletteStorage {
     fn save(&self, palette: &Palette) -> Result<(), StorageError>;
