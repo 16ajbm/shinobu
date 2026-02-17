@@ -10,6 +10,8 @@ use crate::config::HexColour;
 
 const COLOURS_PER_PALETTE: usize = 6;
 
+type PaletteName = String;
+
 #[derive(Debug, thiserror::Error)]
 #[allow(dead_code)]
 pub enum PaletteError {

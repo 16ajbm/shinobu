@@ -1,4 +1,5 @@
 use super::Palette;
+use crate::palette::PaletteName;
 
 mod filesystem;
 mod local;
@@ -6,10 +7,10 @@ mod memory;
 
 trait PaletteStorage {
     fn save(&self, palette: &Palette) -> Result<(), StorageError>;
-    fn load(&self, name: &str) -> Result<Palette, StorageError>;
-    fn delete(&self, name: &str) -> Result<(), StorageError>;
-    fn exists(&self, name: &str) -> bool;
-    fn list_names(&self) -> Vec<String>;
+    fn load(&self, name: &PaletteName) -> Result<Palette, StorageError>;
+    fn delete(&self, name: &PaletteName) -> Result<(), StorageError>;
+    fn exists(&self, name: &PaletteName) -> bool;
+    fn list_names(&self) -> Result<Vec<PaletteName>, StorageError>;
     fn list(&self) -> Result<Vec<Palette>, StorageError>;
 }
 
