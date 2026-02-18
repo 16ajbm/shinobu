@@ -1,3 +1,5 @@
+//! Storage implementation that keeps palettes in memory. This is useful for testing and as a fallback when other storage options are unavailable.
+
 use std::cell::RefCell;
 use std::collections::HashMap;
 

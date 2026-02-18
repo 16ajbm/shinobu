@@ -1,3 +1,5 @@
+//! Storage implementation that saves palettes to the local filesystem.
+
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -19,9 +21,7 @@ impl FileSystemStorage {
     }
 
     pub fn default_path() -> Result<PathBuf, StorageError> {
-        let config_dir = dirs::config_dir().ok_or_else(|| {
-            StorageError::PermissionDenied("Could not determine config directory".to_string())
-        })?;
+        let config_dir = dirs::config_dir().ok_or_else(|| StorageError::PermissionDenied)?;
 
         Ok(config_dir.join("shinobu").join("palettes"))
     }

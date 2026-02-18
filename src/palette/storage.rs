@@ -20,8 +20,10 @@ pub enum StorageError {
     IOError(#[from] std::io::Error),
     #[error("Serialization error: {0}")]
     SerializationError(#[from] serde_json::Error),
-    #[error("Permission denied: {0}")]
-    PermissionDenied(String),
+    #[error("Permission denied")]
+    PermissionDenied,
     #[error("Palette not found: {0}")]
     NotFound(String),
+    #[error("Unknown error: {0}")]
+    Error(String),
 }
