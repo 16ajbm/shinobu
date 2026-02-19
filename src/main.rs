@@ -5,8 +5,7 @@ mod image_processor;
 mod palette;
 mod plate;
 
-#[cfg(feature = "fullstack")]
-mod server;
+
 
 use dioxus::prelude::*;
 
@@ -57,7 +56,7 @@ fn App() -> Element {
 
         div { style: "display: flex; height: 100vh; margin: 0;",
 
-            ControlPanel { config, available_palettes }
+            ControlPanel { dot_size, size_jitter, spacing_multiplier }
 
             match svg_result() {
                 Ok(svg_content) => rsx! {
@@ -67,7 +66,7 @@ fn App() -> Element {
                     }
                 },
                 Err(e) => rsx! {
-                    div { style: "flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; colour: #d32f2f;",
+                    div { style: "flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #d32f2f;",
                         h2 { "Generation Error" }
                         p { "{e}" }
                     }
