@@ -1,3 +1,5 @@
+pub mod svg;
+
 use crate::generator::plate::Plate;
 
 pub trait Painter {
