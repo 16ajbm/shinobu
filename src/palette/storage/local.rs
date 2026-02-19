@@ -48,7 +48,7 @@ impl PaletteStorage for LocalStorage {
                 return StorageError::Error(err.name());
             }
             StorageError::PermissionDenied
-        });
+        })?;
 
         Ok(())
     }
@@ -67,7 +67,7 @@ impl PaletteStorage for LocalStorage {
                 return StorageError::Error(err.name());
             }
             StorageError::PermissionDenied
-        });
+        })?;
 
         Ok(())
     }
@@ -82,7 +82,12 @@ impl PaletteStorage for LocalStorage {
     }
 
     fn list(&self) -> Result<Vec<Palette>, StorageError> {
-        todo!()
+        let names = self.list_names()?;
+
+        Ok(names
+            .iter()
+            .filter_map(|name| self.load(name).ok())
+            .collect())
     }
 
     fn list_names(&self) -> Result<Vec<PaletteName>, StorageError> {
@@ -95,12 +100,10 @@ impl PaletteStorage for LocalStorage {
             StorageError::PermissionDenied
         })?;
 
-        Ok(
-            (0..length)
+        Ok((0..length)
             .filter_map(|i| storage.key(i).ok().flatten())
             .filter(|key| key.starts_with(&self.prefix))
-            .collect()
-        )
+            .collect())
     }
 
     fn load(&self, name: &PaletteName) -> Result<Palette, StorageError> {

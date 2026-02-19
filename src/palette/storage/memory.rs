@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 use super::{Palette, PaletteStorage, StorageError};
+use crate::palette::PaletteName;
 
 #[derive(Debug)]
 pub struct InMemoryStorage {
@@ -26,26 +27,38 @@ impl Default for InMemoryStorage {
 
 impl PaletteStorage for InMemoryStorage {
     fn save(&self, palette: &Palette) -> Result<(), StorageError> {
-        todo!()
+        // Returns `Some()` if the key already exists, which we ignore since we want to overwrite it.
+        self.data
+            .borrow_mut()
+            .insert(palette.name.clone(), palette.clone());
+        Ok(())
     }
 
-    fn delete(&self, name: &str) -> Result<(), StorageError> {
-        todo!()
+    fn delete(&self, name: &PaletteName) -> Result<(), StorageError> {
+        self.data
+            .borrow_mut()
+            .remove(name)
+            .ok_or_else(|| StorageError::NotFound(name.to_string()))?;
+        Ok(())
     }
 
-    fn exists(&self, name: &str) -> bool {
-        todo!()
+    fn exists(&self, name: &PaletteName) -> bool {
+        self.data.borrow().contains_key(name)
     }
 
     fn list(&self) -> Result<Vec<Palette>, StorageError> {
-        todo!()
+        Ok(self.data.borrow().values().cloned().collect())
     }
 
-    fn list_names(&self) -> Vec<String> {
-        todo!()
+    fn list_names(&self) -> Result<Vec<PaletteName>, StorageError> {
+        Ok(self.data.borrow().keys().cloned().collect())
     }
 
-    fn load(&self, name: &str) -> Result<Palette, StorageError> {
-        todo!()
+    fn load(&self, name: &PaletteName) -> Result<Palette, StorageError> {
+        self.data
+            .borrow()
+            .get(name)
+            .cloned()
+            .ok_or_else(|| StorageError::NotFound(name.to_string()))
     }
 }
