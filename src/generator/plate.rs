@@ -6,10 +6,7 @@ pub use dot::Dot;
 
 use rand::Rng;
 
-use crate::generator::{
-    colour_source::ColourSource,
-    point::Point,
-};
+use crate::generator::{colour_source::ColourSource, point::Point};
 
 #[derive(Debug, Clone)]
 pub struct Plate {
