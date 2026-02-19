@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      deploy_branch:
+        description: 'Deploy from current branch'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
