@@ -27,7 +27,7 @@ fn App() -> Element {
 
     rsx! {
         document::Link { rel: "stylesheet", href: MAIN_CSS }
-        
+
         div {
             style: "display: flex; height: 100vh; margin: 0;",
 
@@ -53,5 +53,5 @@ fn App() -> Element {
                 }
             }
         }
-    }   
+    }
 }

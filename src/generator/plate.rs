@@ -1,8 +1,13 @@
+pub mod config;
+pub mod dot;
+
+pub use config::PlateConfig;
+pub use dot::Dot;
+
 use rand::Rng;
 
 use crate::generator::{
     colour_source::ColourSource,
-    plate::{config::PlateConfig, dot::Dot},
     point::Point,
 };
 
