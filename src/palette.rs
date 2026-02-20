@@ -28,7 +28,7 @@ pub struct Palette {
 }
 
 impl Palette {
-    /// Returns all available palletes: presets (+ custom palettes in the future)
+    /// Returns all available palettes: presets (+ custom palettes in the future)
     pub fn load_all() -> Vec<Palette> {
         // Extend to custom loading when in place
         Self::all_presets()
