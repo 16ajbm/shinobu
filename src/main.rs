@@ -25,7 +25,7 @@ fn main() {
 fn App() -> Element {
     // Initialize preset palettes
     let presets = Palette::all_presets();
-    let available_palettes = use_signal(|| Palette::all_presets());
+    let available_palettes = use_signal(Palette::all_presets);
 
     let primary_palette = use_signal(|| presets[0].clone());
     let secondary_palette = use_signal(|| presets[1].clone());

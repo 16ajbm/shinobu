@@ -178,9 +178,9 @@ impl ImageProcessorTrait for CrateImageProcessor {
         let non_max_suppressed = self.non_maximum_suppression(&gradient_buffer);
         let double_thresholded =
             self.double_threshold(&non_max_suppressed, LOW_THRESHOLD, HIGH_THRESHOLD);
-        let edge_extended = self.edge_extension(&double_thresholded);
+        
 
-        edge_extended
+        self.edge_extension(&double_thresholded)
     }
 }
 

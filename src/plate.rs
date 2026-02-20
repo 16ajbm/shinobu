@@ -4,13 +4,12 @@ use crate::config::{HexColour, PlateConfig};
 use crate::generator::{colour_source::ColourSource, point::Point};
 
 /// Dots are the individual coloured elements that make up a plate. Although they are called "dots",
-/// they can come in a variety of shapes.
+/// they will come in a variety of shapes.
 #[derive(Debug, Clone)]
 pub struct Dot {
     pub position: Point,
     pub size: u32,
     pub color: HexColour,
-    pub shape: String,
 }
 
 #[derive(Debug, Clone)]
@@ -40,7 +39,6 @@ impl Plate {
                     color: colour_source.sample_colour(point.x, point.y, size as f32),
                     position: point,
                     size,
-                    shape: "circle".to_string(),
                 }
             })
             .collect();
@@ -108,7 +106,6 @@ impl Plate {
             position,
             size,
             color,
-            shape: "circle".to_string(),
         }
     }
 
