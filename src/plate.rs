@@ -1,5 +1,12 @@
+pub mod config;
+pub mod dot;
+
+pub use config::PlateConfig;
+pub use dot::Dot;
+
 use rand::Rng;
 
+<<<<<<<< HEAD:src/plate.rs
 use crate::config::{HexColour, PlateConfig};
 use crate::generator::{colour_source::ColourSource, point::Point};
 
@@ -11,6 +18,9 @@ pub struct Dot {
     pub size: u32,
     pub color: HexColour,
 }
+========
+use crate::generator::{colour_source::ColourSource, point::Point};
+>>>>>>>> origin/main:src/generator/plate.rs
 
 #[derive(Debug, Clone)]
 pub struct Plate {
