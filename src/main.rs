@@ -5,9 +5,6 @@ mod image_processor;
 mod palette;
 mod plate;
 
-#[cfg(feature = "fullstack")]
-mod server;
-
 use dioxus::prelude::*;
 
 use crate::components::ControlPanel;
@@ -67,7 +64,7 @@ fn App() -> Element {
                     }
                 },
                 Err(e) => rsx! {
-                    div { style: "flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; colour: #d32f2f;",
+                    div { style: "flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #d32f2f;",
                         h2 { "Generation Error" }
                         p { "{e}" }
                     }
