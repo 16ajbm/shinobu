@@ -45,7 +45,7 @@ impl Default for FileSystemStorage {
 
 impl PaletteStorage for FileSystemStorage {
     fn save(&self, palette: &Palette) -> Result<(), StorageError> {
-        let path = self.palette_path(&palette.name);
+        let path = self.palette_path(&palette.id);
 
         let data = serde_json::to_string_pretty(palette)?;
 

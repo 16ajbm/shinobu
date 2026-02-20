@@ -4881,6 +4881,7 @@ version = "0.1.0"
 dependencies = [
  "async-std",
  "dioxus",
+ "dirs",
  "getrandom 0.3.4",
  "image",
  "js-sys",

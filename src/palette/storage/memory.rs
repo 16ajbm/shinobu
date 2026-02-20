@@ -30,7 +30,7 @@ impl PaletteStorage for InMemoryStorage {
         // Returns `Some()` if the key already exists, which we ignore since we want to overwrite it.
         self.data
             .borrow_mut()
-            .insert(palette.name.clone(), palette.clone());
+            .insert(palette.id.clone(), palette.clone());
         Ok(())
     }
 

@@ -1,7 +1,4 @@
-mod hooks;
 pub mod storage;
-
-pub use hooks::use_persisted_palette;
 
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -170,10 +167,6 @@ mod tests {
 
     use super::*;
     use proptest::prelude::*;
-
-    // Helper
-    // fn assert_valid_hex_colour(colour: &str) {
-    // }
 
     #[test]
     #[should_panic(expected = "Invalid hex colour")]
