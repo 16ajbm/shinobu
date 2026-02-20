@@ -120,3 +120,9 @@ impl Plate {
         }
     }
 }
+
+impl Default for Plate {
+    fn default() -> Self {
+        Self::new(PlateConfig::default())
+    }
+}

@@ -1,7 +1,3 @@
-mod hooks;
-
-pub use hooks::use_persisted_palette;
-
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -24,16 +20,22 @@ pub enum PaletteError {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Palette {
-    pub name: String,
+    pub id: String,
+    pub display_name: String,
     pub colors: [HexColour; COLOURS_PER_PALETTE],
     pub is_preset: bool,
 }
 
 impl Palette {
-    /// Create a preset palette from colors array
-    pub fn preset(name: String, colours: [HexColour; COLOURS_PER_PALETTE]) -> Self {
+    /// Create a preset palette from colors array with a stable ID
+    pub fn preset(
+        id: String,
+        display_name: String,
+        colours: [HexColour; COLOURS_PER_PALETTE],
+    ) -> Self {
         Self {
-            name,
+            id,
+            display_name,
             colors: colours,
             is_preset: true,
         }
@@ -71,6 +73,7 @@ impl Palette {
 
     pub fn red() -> Self {
         Self::preset(
+            "preset_red".to_string(),
             "Red".to_string(),
             [
                 "#d32f2fff".to_string(),
@@ -85,6 +88,7 @@ impl Palette {
 
     pub fn green() -> Self {
         Self::preset(
+            "preset_green".to_string(),
             "Green".to_string(),
             [
                 "#388e3cff".to_string(),
@@ -99,6 +103,7 @@ impl Palette {
 
     pub fn greyscale() -> Self {
         Self::preset(
+            "preset_greyscale".to_string(),
             "Greyscale".to_string(),
             [
                 "#212121ff".to_string(),

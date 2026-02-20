@@ -58,3 +58,9 @@ impl PlateConfig {
         (base * (1.0 - self.size_jitter)).max(1.0) as u32
     }
 }
+
+impl Default for PlateConfig {
+    fn default() -> Self {
+        todo!()
+    }
+}

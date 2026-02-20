@@ -20,7 +20,7 @@ pub fn PaletteSelector(
             // Current selection with preview
             div { style: "padding: 10px; background: #f5f5f5; border-radius: 6px; margin-bottom: 6px; border: 2px solid #ddd;",
                 div { style: "font-size: 14px; margin-bottom: 6px; font-weight: 500;",
-                    "{selected().name}"
+                    "{selected().display_name}"
                 }
                 PalettePreview { palette: selected().clone() }
             }
@@ -28,15 +28,16 @@ pub fn PaletteSelector(
             // Dropdown selector
             select {
                 style: "width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; cursor: pointer;",
-                value: "{selected().name}",
+                value: "{selected().display_name}",
                 onchange: move |evt| {
                     let selected_name = evt.value();
-                    if let Some(palette) = options().iter().find(|p| p.name == selected_name) {
+                    if let Some(palette) = options().iter().find(|p| p.display_name == selected_name)
+                    {
                         selected.set(palette.clone());
                     }
                 },
                 for palette in options() {
-                    option { value: "{palette.name}", "{palette.name}" }
+                    option { value: "{palette.display_name}", "{palette.display_name}" }
                 }
             }
         }

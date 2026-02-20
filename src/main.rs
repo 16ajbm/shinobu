@@ -13,7 +13,7 @@ use dioxus::prelude::*;
 use crate::components::ControlPanel;
 use crate::config::PlateConfig;
 use crate::generator::create_plate;
-use crate::palette::{use_persisted_palette, Palette};
+use crate::palette::Palette;
 
 static MAIN_CSS: Asset = asset!("/assets/styling.css");
 
@@ -27,18 +27,8 @@ fn App() -> Element {
     let presets = Palette::all_presets();
     let available_palettes = use_signal(|| Palette::all_presets());
 
-    // Load persisted palette selections (remembers user's choice across reloads)
-    let mut primary_palette = use_persisted_palette(
-        "shinobu_primary_palette",
-        presets.clone(),
-        presets[0].clone(),
-    );
-
-    let mut secondary_palette = use_persisted_palette(
-        "shinobu_secondary_palette",
-        presets.clone(),
-        presets[1].clone(),
-    );
+    let primary_palette = use_signal(|| presets[0].clone());
+    let secondary_palette = use_signal(|| presets[1].clone());
 
     // Create config signal and sync with persisted palettes
     let mut config = use_signal(|| PlateConfig {
