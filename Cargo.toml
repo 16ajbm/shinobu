@@ -4,6 +4,8 @@ version = "0.1.0"
 authors = ["Aidan Moffat <16ajbm@queensu.ca>"]
 edition = "2021"
 
+# See more features at https://dioxuslabs.com/learn/0.7/tutorial/new_app#the-cargotoml
+
 [features]
 default = ["web"]
 web = ["dioxus/web"]

@@ -2,14 +2,12 @@
 
 An app for generating Ishihara plates.
 
-
 ## Prerequisites
 
 | Tool | Version | Purpose |
 |------|---------|---------|
 | Dioxus CLI | `0.6.3` | Build & serve the app |
 | Rust | `1.93.0` | Language toolchain |
-
 
 ## Serving Your App
 
