@@ -38,7 +38,7 @@ impl Default for LocalStorage {
 impl PaletteStorage for LocalStorage {
     fn save(&self, palette: &Palette) -> Result<(), StorageError> {
         let storage = self.get_storage()?;
-        let key = self.prefix_key(&palette.name);
+        let key = self.prefix_key(&palette.id);
 
         let json = serde_json::to_string_pretty(palette)?;
 

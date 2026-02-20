@@ -30,8 +30,8 @@ pub fn PaletteSelector(
             select {
                 style: "width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; cursor: pointer;",
                 value: "{selected.display_name}",
-                onchange: move |evt| {
-                    let selected_name = evt.value();
+                onchange: move |event| {
+                    let selected_name = event.value();
                     if let Some(palette) = options().iter().find(|p| p.display_name == selected_name)
                     {
                         on_change.call(palette.clone());

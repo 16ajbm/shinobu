@@ -1,6 +1,7 @@
 mod components;
 mod config;
 mod generator;
+mod hex_colour;
 mod image_processor;
 mod palette;
 mod plate;

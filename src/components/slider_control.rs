@@ -25,8 +25,8 @@ pub fn SliderControl(
                 max: "{max}",
                 step: "{step}",
                 value: "{value}",
-                oninput: move |evt| {
-                    if let Ok(v) = evt.value().parse::<f32>() {
+                oninput: move |event| {
+                    if let Ok(v) = event.value().parse::<f32>() {
                         on_change.call(v);
                     }
                 },

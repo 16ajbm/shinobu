@@ -1,7 +1,8 @@
 use rand::Rng;
 
-use crate::config::{HexColour, PlateConfig};
+use crate::config::PlateConfig;
 use crate::generator::{colour_source::ColourSource, point::Point};
+use crate::hex_colour::HexColour;
 
 /// Dots are the individual coloured elements that make up a plate. Although they are called "dots",
 /// they will come in a variety of shapes.

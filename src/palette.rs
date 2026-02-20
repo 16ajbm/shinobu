@@ -1,9 +1,11 @@
 pub mod storage;
 
+use uuid::Uuid;
+
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::config::HexColour;
+use crate::hex_colour::HexColour;
 
 const COLOURS_PER_PALETTE: usize = 6;
 
@@ -57,6 +59,16 @@ impl Palette {
             display_name,
             colours: colours,
             is_preset: true,
+        }
+    }
+
+    pub fn custom(display_name: String, colours: [HexColour; COLOURS_PER_PALETTE]) -> Self {
+        let id = Uuid::new_v4().to_string();
+        Self {
+            id,
+            display_name,
+            colours,
+            is_preset: false,
         }
     }
 
