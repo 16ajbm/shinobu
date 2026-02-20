@@ -3,20 +3,19 @@ use dioxus::prelude::*;
 #[component]
 pub fn SliderControl(
     label: String,
-    value: Signal<f32>,
+    value: f32,
+    on_change: EventHandler<f32>,
     min: f32,
     max: f32,
     #[props(default = 0.01)] step: f32,
     #[props(default = 2)] precision: usize,
 ) -> Element {
     rsx! {
-        div {
-            class: "slider-control",
-            style: "margin-bottom: 16px;",
+        div { class: "slider-control", style: "margin-bottom: 16px;",
             label {
                 class: "slider-label",
                 style: "display: block; margin-bottom: 8px; font-weight: 500; font-size: inherit;",
-                "{label}: {value():.precision$}"
+                "{label}: {value:.precision$}"
             }
             input {
                 r#type: "range",
@@ -25,12 +24,12 @@ pub fn SliderControl(
                 min: "{min}",
                 max: "{max}",
                 step: "{step}",
-                value: "{value()}",
+                value: "{value}",
                 oninput: move |evt| {
                     if let Ok(v) = evt.value().parse::<f32>() {
-                        value.set(v);
+                        on_change.call(v);
                     }
-                }
+                },
             }
         }
     }

@@ -7,8 +7,9 @@ use super::PalettePreview;
 #[component]
 pub fn PaletteSelector(
     label: String,
-    selected: Signal<Palette>,
-    options: ReadOnlySignal<Vec<Palette>>,
+    selected: Palette,
+    options: ReadSignal<Vec<Palette>>,
+    on_change: EventHandler<Palette>
 ) -> Element {
     rsx! {
         div { style: "margin-bottom: 16px;",
@@ -20,20 +21,20 @@ pub fn PaletteSelector(
             // Current selection with preview
             div { style: "padding: 10px; background: #f5f5f5; border-radius: 6px; margin-bottom: 6px; border: 2px solid #ddd;",
                 div { style: "font-size: 14px; margin-bottom: 6px; font-weight: 500;",
-                    "{selected().display_name}"
+                    "{selected.display_name}"
                 }
-                PalettePreview { palette: selected().clone() }
+                PalettePreview { palette: selected.clone() }
             }
 
             // Dropdown selector
             select {
                 style: "width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; cursor: pointer;",
-                value: "{selected().display_name}",
+                value: "{selected.display_name}",
                 onchange: move |evt| {
                     let selected_name = evt.value();
                     if let Some(palette) = options().iter().find(|p| p.display_name == selected_name)
                     {
-                        selected.set(palette.clone());
+                        on_change.call(palette.clone());
                     }
                 },
                 for palette in options() {
