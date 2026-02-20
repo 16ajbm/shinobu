@@ -5,8 +5,6 @@ mod image_processor;
 mod palette;
 mod plate;
 
-
-
 use dioxus::prelude::*;
 
 use crate::components::ControlPanel;
@@ -56,7 +54,7 @@ fn App() -> Element {
 
         div { style: "display: flex; height: 100vh; margin: 0;",
 
-            ControlPanel { dot_size, size_jitter, spacing_multiplier }
+            ControlPanel { config, available_palettes }
 
             match svg_result() {
                 Ok(svg_content) => rsx! {
