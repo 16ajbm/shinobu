@@ -48,6 +48,7 @@ impl Palette {
     }
 
     /// Validate palette name according to business rules
+    #[allow(dead_code)]
     pub fn validate_name(name: &str) -> Result<(), String> {
         if name.trim().is_empty() {
             Err("Palette name cannot be empty".to_string())
@@ -64,6 +65,7 @@ impl Palette {
     }
 
     /// Check if this palette can be edited (only custom palettes)
+    #[allow(dead_code)]
     pub fn is_editable(&self) -> bool {
         !self.is_preset
     }
