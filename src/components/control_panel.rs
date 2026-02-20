@@ -7,9 +7,7 @@ use crate::palette::Palette;
 #[component]
 pub fn ControlPanel(
     mut config: Signal<PlateConfig>,
-    primary_palette: Signal<Palette>,
-    secondary_palette: Signal<Palette>,
-    available_palettes: ReadSignal<Vec<Palette>>,
+    available_palettes: Signal<Vec<Palette>>,
 ) -> Element {
 
 

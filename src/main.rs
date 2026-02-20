@@ -23,32 +23,25 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    // Initialize preset palettes
-    let presets = Palette::all_presets();
-    let available_palettes = use_signal(Palette::all_presets);
+    // Initialize palettes
+    let available_palettes = use_signal(Palette::load_all);
 
-    let primary_palette = use_signal(|| presets[0].clone());
-    let secondary_palette = use_signal(|| presets[1].clone());
 
     // Create config signal and sync with persisted palettes
-    let mut config = use_signal(|| PlateConfig {
+    let config = use_signal(|| {
+        let palettes = available_palettes();
+        PlateConfig {
         width: 800,
         height: 600,
         dot_size: 10,
         size_jitter: 0.3,
         spacing_multiplier: 1.0,
-        primary: presets[0].clone(),
-        secondary: presets[1].clone(),
+        primary: palettes[0].clone(),
+        secondary: palettes[1].clone(),
         background: None,
+        }
     });
 
-    // Update config when persisted palettes change
-    use_effect(move || {
-        config.with_mut(|c| {
-            c.primary = primary_palette();
-            c.secondary = secondary_palette();
-        });
-    });
 
     let svg_result = use_memo(move || {
         let c = config();
@@ -66,12 +59,7 @@ fn App() -> Element {
 
         div { style: "display: flex; height: 100vh; margin: 0;",
 
-            ControlPanel {
-                config,
-                primary_palette,
-                secondary_palette,
-                available_palettes,
-            }
+            ControlPanel { config, available_palettes }
 
             match svg_result() {
                 Ok(svg_content) => rsx! {
