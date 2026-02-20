@@ -1,16 +1,15 @@
 pub mod colour_source;
 pub mod painter;
-pub mod palette;
-pub mod plate;
 pub mod point;
 pub mod poisson;
 
 use crate::generator::colour_source::EdgeBasedColourSource;
 use crate::image_processor::ImageBuffer;
+use crate::palette::Palette;
 
-pub use self::palette::Palette;
-pub use self::plate::{Dot, Plate, PlateConfig};
 pub use self::point::Point;
+use crate::config::PlateConfig;
+use crate::plate::{Dot, Plate};
 
 pub type HexColour = String;
 
@@ -45,11 +44,11 @@ impl Generator {
         let primary = config.primary.clone();
         let secondary = config.secondary.clone();
 
-        let color_source =
+        let colour_source =
             EdgeBasedColourSource::new(config.width, config.height, edge_map, &primary, &secondary);
 
-        let mut plate = Plate::from_points(points, config, &color_source);
-        plate.fill_gaps(15, &color_source);
+        let mut plate = Plate::from_points(points, config, &colour_source);
+        plate.fill_gaps(15, &colour_source);
         plate
     }
 
@@ -68,8 +67,11 @@ pub fn create_plate(
     dot_size: u32,
     size_jitter: f32,
     spacing_multiplier: f32,
+    primary: &Palette,
+    secondary: &Palette,
 ) -> Result<String, String> {
-    use crate::generator::{poisson::PoissonSampler, Generator, Palette, PlateConfig};
+    use crate::config::PlateConfig;
+    use crate::generator::{poisson::PoissonSampler, Generator};
 
     let edge_map = load_default_edge_map()?;
 
@@ -79,8 +81,8 @@ pub fn create_plate(
         dot_size,
         size_jitter,
         spacing_multiplier,
-        primary: Palette::red(),
-        secondary: Palette::green(),
+        primary: primary.clone(),
+        secondary: secondary.clone(),
         background: None,
     };
 

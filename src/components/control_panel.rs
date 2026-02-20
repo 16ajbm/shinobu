@@ -1,23 +1,16 @@
-use super::{ControlGroup, SliderControl};
+use super::{ControlGroup, PaletteSelector, SliderControl};
 use dioxus::prelude::*;
+
+use crate::config::PlateConfig;
+use crate::palette::Palette;
 
 #[component]
 pub fn ControlPanel(
-    mut dot_size: Signal<u32>,
-    size_jitter: Signal<f32>,
-    spacing_multiplier: Signal<f32>,
+    mut config: Signal<PlateConfig>,
+    available_palettes: Signal<Vec<Palette>>,
 ) -> Element {
-    let dot_size_f32 = use_signal(|| dot_size() as f32);
-
-    // Sync f32 slider back to u32 signal (split into two effects to avoid read/write in same scope)
-    use_effect(move || {
-        let new_value = dot_size_f32() as u32;
-        dot_size.set(new_value);
-    });
-
     rsx! {
-        aside {
-            class: "control-panel",
+        aside { class: "control-panel",
 
             h2 {
                 class: "red",
@@ -25,32 +18,48 @@ pub fn ControlPanel(
                 "Plate Controls"
             }
 
-            ControlGroup {
-                title: "Dot Sizing",
+            ControlGroup { title: "Colour Palettes",
+                PaletteSelector {
+                    label: "Primary".to_string(),
+                    selected: config().primary,
+                    options: available_palettes,
+                    on_change: move |val| { config.with_mut(|c| c.primary = val) },
+                }
+                PaletteSelector {
+                    label: "Secondary (Edges)".to_string(),
+                    selected: config().secondary,
+                    options: available_palettes,
+                    on_change: move |val| { config.with_mut(|c| c.secondary = val) },
+                }
+            }
+
+            ControlGroup { title: "Dot Sizing",
                 SliderControl {
                     label: "Base Size",
-                    value: dot_size_f32,
+                    value: config().dot_size as f32,
                     min: 5.0,
                     max: 30.0,
                     step: 1.0,
                     precision: 0,
+                    on_change: move |val| { config.with_mut(|c| c.dot_size = val as u32) },
                 }
                 SliderControl {
                     label: "Size Variation",
-                    value: size_jitter,
+                    value: config().size_jitter,
                     min: 0.0,
                     max: 1.0,
                     step: 0.01,
+                    on_change: move |val| { config.with_mut(|c| c.size_jitter = val) },
                 }
             }
 
-            ControlGroup {
-                title: "Spacing",
+            ControlGroup { title: "Spacing",
                 SliderControl {
                     label: "Multiplier",
-                    value: spacing_multiplier,
+                    value: config().spacing_multiplier,
                     min: 0.5,
                     max: 2.0,
+                    on_change: move |val| { config.with_mut(|c| c.spacing_multiplier = val) },
                 }
             }
         }

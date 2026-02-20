@@ -1,7 +1,7 @@
-use crate::generator::HexColour;
-use crate::generator::Palette;
-
+use crate::palette::Palette;
 use rand::Rng;
+
+pub type HexColour = String;
 
 #[derive(Debug, Clone)]
 pub struct PlateConfig {
@@ -27,8 +27,8 @@ impl PlateConfig {
             dot_size,
             width,
             height,
-            primary: Palette::from_colour("#ffffff".to_string()),
-            secondary: Palette::default(),
+            primary: Palette::red(),
+            secondary: Palette::green(),
             background: None,
             size_jitter,
             spacing_multiplier,
@@ -56,5 +56,11 @@ impl PlateConfig {
     pub fn min_dot_size(&self) -> u32 {
         let base = self.dot_size as f32;
         (base * (1.0 - self.size_jitter)).max(1.0) as u32
+    }
+}
+
+impl Default for PlateConfig {
+    fn default() -> Self {
+        todo!()
     }
 }

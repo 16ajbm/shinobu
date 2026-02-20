@@ -9,8 +9,6 @@ pub mod sobel_orientation;
 pub mod test_utils;
 
 pub use self::image_buffer::{GrayScaleBuffer, ImageBuffer};
-pub use self::image_processor::{
-    ImageProcessor, ImageProcessorTrait, NON_EDGE, STRONG_EDGE, WEAK_EDGE,
-};
+pub use self::image_processor::{ImageProcessorTrait, NON_EDGE, STRONG_EDGE, WEAK_EDGE};
 pub use self::kernel::Kernel;
 pub use self::sobel_orientation::SobelOrientation;

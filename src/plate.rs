@@ -1,12 +1,16 @@
-pub mod config;
-pub mod dot;
-
-pub use config::PlateConfig;
-pub use dot::Dot;
-
 use rand::Rng;
 
+use crate::config::{HexColour, PlateConfig};
 use crate::generator::{colour_source::ColourSource, point::Point};
+
+/// Dots are the individual coloured elements that make up a plate. Although they are called "dots",
+/// they will come in a variety of shapes.
+#[derive(Debug, Clone)]
+pub struct Dot {
+    pub position: Point,
+    pub size: u32,
+    pub colour: HexColour,
+}
 
 #[derive(Debug, Clone)]
 pub struct Plate {
@@ -32,10 +36,9 @@ impl Plate {
             .map(|point| {
                 let size = config.random_dot_size();
                 Dot {
-                    color: colour_source.sample_colour(point.x, point.y, size as f32),
+                    colour: colour_source.sample_colour(point.x, point.y, size as f32),
                     position: point,
                     size,
-                    shape: "circle".to_string(),
                 }
             })
             .collect();
@@ -98,12 +101,11 @@ impl Plate {
     }
 
     fn create_dot(&self, position: Point, size: u32, colour_source: &dyn ColourSource) -> Dot {
-        let color = colour_source.sample_colour(position.x, position.y, size as f32);
+        let colour = colour_source.sample_colour(position.x, position.y, size as f32);
         Dot {
             position,
             size,
-            color,
-            shape: "circle".to_string(),
+            colour,
         }
     }
 
@@ -113,5 +115,11 @@ impl Plate {
             x: rng.random_range(0.0..self.config.width as f32),
             y: rng.random_range(0.0..self.config.height as f32),
         }
+    }
+}
+
+impl Default for Plate {
+    fn default() -> Self {
+        Self::new(PlateConfig::default())
     }
 }

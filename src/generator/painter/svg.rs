@@ -10,11 +10,11 @@ impl super::Painter for SvgPainter {
     fn paint(&self, plate: Plate) -> String {
         let mut document = setup_document(plate.config.width, plate.config.height);
 
-        if let Some(bg_color) = &plate.config.background {
+        if let Some(bg_colour) = &plate.config.background {
             let background = Rectangle::new()
                 .set("width", plate.config.width)
                 .set("height", plate.config.height)
-                .set("fill", bg_color.as_str());
+                .set("fill", bg_colour.as_str());
             document = document.add(background);
         }
 
@@ -41,5 +41,5 @@ fn draw_circle(dot: Dot) -> Circle {
         .set("cx", dot.position.x)
         .set("cy", dot.position.y)
         .set("r", dot.size)
-        .set("fill", dot.color)
+        .set("fill", dot.colour)
 }
