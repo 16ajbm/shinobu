@@ -9,8 +9,6 @@ pub fn ControlPanel(
     mut config: Signal<PlateConfig>,
     available_palettes: Signal<Vec<Palette>>,
 ) -> Element {
-
-
     rsx! {
         aside { class: "control-panel",
 
@@ -20,7 +18,7 @@ pub fn ControlPanel(
                 "Plate Controls"
             }
 
-            ControlGroup { title: "Color Palettes",
+            ControlGroup { title: "Colour Palettes",
                 PaletteSelector {
                     label: "Primary".to_string(),
                     selected: config().primary,

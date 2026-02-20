@@ -6,8 +6,8 @@ use crate::palette::Palette;
 pub fn PalettePreview(palette: Palette) -> Element {
     rsx! {
         div { style: "display: flex; gap: 2px; height: 24px; border-radius: 4px; overflow: hidden;",
-            for color in palette.colors() {
-                div { style: "flex: 1; background: {color}; min-width: 0;" }
+            for colour in palette.colours() {
+                div { style: "flex: 1; background: {colour}; min-width: 0;" }
             }
         }
     }

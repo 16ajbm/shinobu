@@ -15,24 +15,24 @@ pub struct Toast {
 }
 
 struct ToastStyles {
-    bg_color: &'static str,
-    border_color: &'static str,
+    bg_colour: &'static str,
+    border_colour: &'static str,
 }
 
 impl ToastType {
     fn styles(&self) -> ToastStyles {
         match self {
             ToastType::Success => ToastStyles {
-                bg_color: "#4caf50",
-                border_color: "#45a049",
+                bg_colour: "#4caf50",
+                border_colour: "#45a049",
             },
             ToastType::Error => ToastStyles {
-                bg_color: "#f44336",
-                border_color: "#da190b",
+                bg_colour: "#f44336",
+                border_colour: "#da190b",
             },
             ToastType::Info => ToastStyles {
-                bg_color: "#2196f3",
-                border_color: "#0b7dda",
+                bg_colour: "#2196f3",
+                border_colour: "#0b7dda",
             },
         }
     }
@@ -40,10 +40,10 @@ impl ToastType {
 
 const TOAST_CONTAINER: &str =
     "position: fixed; top: 20px; right: 20px; z-index: 1000; animation: slideIn 0.3s ease-out;";
-const TOAST_BOX: &str = "color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 250px; max-width: 400px;";
+const TOAST_BOX: &str = "colour: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 250px; max-width: 400px;";
 const TOAST_CONTENT: &str = "display: flex; justify-content: space-between; align-items: center;";
 const TOAST_MESSAGE: &str = "margin: 0; font-size: 14px; font-weight: 500;";
-const CLOSE_BUTTON: &str = "background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; margin-left: 16px; line-height: 1;";
+const CLOSE_BUTTON: &str = "background: transparent; border: none; colour: white; font-size: 20px; cursor: pointer; margin-left: 16px; line-height: 1;";
 const SLIDE_IN_ANIMATION: &str = "
     @keyframes slideIn {
         from { transform: translateX(400px); opacity: 0; }
@@ -91,7 +91,7 @@ fn ToastMessage(message: String, toast_type: ToastType, on_close: EventHandler) 
     let styles = toast_type.styles();
     let toast_style = format!(
         "{TOAST_BOX} background: {}; border-left: 4px solid {};",
-        styles.bg_color, styles.border_color
+        styles.bg_colour, styles.border_colour
     );
 
     rsx! {

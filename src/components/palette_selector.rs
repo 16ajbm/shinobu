@@ -9,7 +9,7 @@ pub fn PaletteSelector(
     label: String,
     selected: Palette,
     options: ReadSignal<Vec<Palette>>,
-    on_change: EventHandler<Palette>
+    on_change: EventHandler<Palette>,
 ) -> Element {
     rsx! {
         div { style: "margin-bottom: 16px;",

@@ -44,11 +44,11 @@ impl Generator {
         let primary = config.primary.clone();
         let secondary = config.secondary.clone();
 
-        let color_source =
+        let colour_source =
             EdgeBasedColourSource::new(config.width, config.height, edge_map, &primary, &secondary);
 
-        let mut plate = Plate::from_points(points, config, &color_source);
-        plate.fill_gaps(15, &color_source);
+        let mut plate = Plate::from_points(points, config, &colour_source);
+        plate.fill_gaps(15, &colour_source);
         plate
     }
 

@@ -9,7 +9,7 @@ use crate::generator::{colour_source::ColourSource, point::Point};
 pub struct Dot {
     pub position: Point,
     pub size: u32,
-    pub color: HexColour,
+    pub colour: HexColour,
 }
 
 #[derive(Debug, Clone)]
@@ -36,7 +36,7 @@ impl Plate {
             .map(|point| {
                 let size = config.random_dot_size();
                 Dot {
-                    color: colour_source.sample_colour(point.x, point.y, size as f32),
+                    colour: colour_source.sample_colour(point.x, point.y, size as f32),
                     position: point,
                     size,
                 }
@@ -101,11 +101,11 @@ impl Plate {
     }
 
     fn create_dot(&self, position: Point, size: u32, colour_source: &dyn ColourSource) -> Dot {
-        let color = colour_source.sample_colour(position.x, position.y, size as f32);
+        let colour = colour_source.sample_colour(position.x, position.y, size as f32);
         Dot {
             position,
             size,
-            color,
+            colour,
         }
     }
 

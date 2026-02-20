@@ -9,12 +9,12 @@ const COLOURS_PER_PALETTE: usize = 6;
 #[allow(dead_code)]
 pub enum PaletteError {
     #[error(
-        "Invalid color count: expected {}, got different amount",
+        "Invalid colour count: expected {}, got different amount",
         COLOURS_PER_PALETTE
     )]
-    InvalidColorCount,
-    #[error("Invalid color format: {0}")]
-    InvalidColorFormat(String),
+    InvalidColourCount,
+    #[error("Invalid colour format: {0}")]
+    InvalidColourFormat(String),
     #[error("Name already exists: {0}")]
     NameAlreadyExists(String),
 }
@@ -23,7 +23,7 @@ pub enum PaletteError {
 pub struct Palette {
     pub id: String,
     pub display_name: String,
-    pub colors: [HexColour; COLOURS_PER_PALETTE],
+    pub colours: [HexColour; COLOURS_PER_PALETTE],
     pub is_preset: bool,
 }
 
@@ -34,16 +34,24 @@ impl Palette {
         Self::all_presets()
     }
 
-    /// Create a preset palette from colors array with a stable ID
+    /// Create a preset palette from colours array with a stable ID
     pub fn preset(
         id: String,
         display_name: String,
         colours: [HexColour; COLOURS_PER_PALETTE],
     ) -> Self {
+        for colour in &colours {
+            assert!(
+                Self::is_valid_hex_colour(colour),
+                "Invalid hex colour: '{}'",
+                colour
+            )
+        }
+
         Self {
             id,
             display_name,
-            colors: colours,
+            colours: colours,
             is_preset: true,
         }
     }
@@ -60,6 +68,20 @@ impl Palette {
         }
     }
 
+    fn is_valid_hex_colour(colour: &HexColour) -> bool {
+        if !colour.starts_with('#') {
+            return false;
+        }
+
+        let hex = &colour[1..];
+
+        if hex.len() != 6 && hex.len() != 8 {
+            return false;
+        }
+
+        hex.chars().all(|c| c.is_ascii_hexdigit())
+    }
+
     /// Get all built-in preset palettes
     pub fn all_presets() -> Vec<Self> {
         vec![Self::red(), Self::green(), Self::greyscale()]
@@ -71,13 +93,13 @@ impl Palette {
         !self.is_preset
     }
 
-    pub fn colors(&self) -> &[HexColour; COLOURS_PER_PALETTE] {
-        &self.colors
+    pub fn colours(&self) -> &[HexColour; COLOURS_PER_PALETTE] {
+        &self.colours
     }
 
     pub fn random_colour(&self) -> HexColour {
         let index = rand::rng().random_range(0..COLOURS_PER_PALETTE);
-        self.colors[index].clone()
+        self.colours[index].clone()
     }
 
     pub fn red() -> Self {
@@ -130,4 +152,36 @@ impl Default for Palette {
     fn default() -> Self {
         Self::greyscale()
     }
+}
+
+#[cfg(test)]
+mod test_utils;
+
+#[cfg(test)]
+mod tests {
+    use crate::palette::test_utils;
+
+    use super::*;
+    use proptest::prelude::*;
+
+    // Helper
+    // fn assert_valid_hex_colour(colour: &str) {
+    // }
+
+    #[test]
+    #[should_panic(expected = "Invalid hex colour")]
+    fn test_preset_panics_on_invalid_hex_colour() {
+        Palette::preset(
+            "id".to_string(),
+            "Test".to_string(),
+            ["bad"; 6].map(String::from),
+        );
+    }
+
+    proptest!(
+        #[test]
+        fn test_is_valid_hex_colour(colour in test_utils::hex_colour()) {
+            assert!(Palette::is_valid_hex_colour(&colour));
+        }
+    );
 }

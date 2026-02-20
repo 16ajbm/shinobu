@@ -26,22 +26,20 @@ fn App() -> Element {
     // Initialize palettes
     let available_palettes = use_signal(Palette::load_all);
 
-
     // Create config signal and sync with persisted palettes
     let config = use_signal(|| {
         let palettes = available_palettes();
         PlateConfig {
-        width: 800,
-        height: 600,
-        dot_size: 10,
-        size_jitter: 0.3,
-        spacing_multiplier: 1.0,
-        primary: palettes[0].clone(),
-        secondary: palettes[1].clone(),
-        background: None,
+            width: 800,
+            height: 600,
+            dot_size: 10,
+            size_jitter: 0.3,
+            spacing_multiplier: 1.0,
+            primary: palettes[0].clone(),
+            secondary: palettes[1].clone(),
+            background: None,
         }
     });
-
 
     let svg_result = use_memo(move || {
         let c = config();
@@ -69,7 +67,7 @@ fn App() -> Element {
                     }
                 },
                 Err(e) => rsx! {
-                    div { style: "flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #d32f2f;",
+                    div { style: "flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; colour: #d32f2f;",
                         h2 { "Generation Error" }
                         p { "{e}" }
                     }
