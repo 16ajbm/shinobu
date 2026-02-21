@@ -14,9 +14,9 @@ pub fn PaletteEditor(
     on_cancel: EventHandler<()>,
 ) -> Element {
     let mut name = use_signal(String::new);
-    let mut colours = use_signal(["#000000ff"; 6].map(String::from));
+    let mut colours = use_signal(|| ["#000000ff"; 6].map(String::from));
 
-    let update_colour = move |i: usize, c: HexColour| {
+    let mut update_colour = move |i: usize, c: HexColour| {
         colours.with_mut(|colours| colours[i] = c);
     };
 
@@ -33,9 +33,49 @@ pub fn PaletteEditor(
         name.set(String::new());
     };
 
+    let preview = use_memo(move || {
+        let display_name = if name().is_empty() {
+            "Preview".to_string()
+        } else {
+            name()
+        };
+        Palette::custom(display_name, colours())
+    });
+
     rsx! {
         div { class: "palette-editor",
             h3 { "Create Custom Palette" }
+
+            div { class: "editor-section",
+                label { "Preview" }
+                PalettePreview { palette: preview() }
+            }
+        }
+
+        div { class: "editor-section",
+            label { "Palette Name" }
+            input {
+                r#type: "text",
+                value: "{name}",
+                placeholder: "My Custom Palette",
+                oninput: move |event| name.set(event.value()),
+            }
+        }
+        div { class: "editor-section",
+            label { "Colours" }
+            div { class: "colour-grid",
+                for (i , colour) in colours().iter().enumerate() {
+                    ColourPicker {
+                        key: "{i}",
+                        value: colour.clone(),
+                        on_change: move |colour| update_colour(i, colour),
+                    }
+                }
+            }
+        }
+        div { class: "editor-actions",
+            button { onclick: handle_save, "Save Palette" }
+            button { onclick: move |_| on_cancel.call(()), "Cancel" }
         }
     }
 }
