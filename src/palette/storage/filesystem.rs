@@ -90,4 +90,8 @@ impl PaletteStorage for FileSystemStorage {
 
         Ok(serde_json::from_str(&json)?)
     }
+
+    fn load_all(&self) -> Result<Vec<Palette>, StorageError> {
+        todo!()
+    }
 }

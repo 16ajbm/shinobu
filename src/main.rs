@@ -8,7 +8,7 @@ mod plate;
 
 use dioxus::prelude::*;
 
-use crate::components::ControlPanel;
+use crate::components::{ControlPanel, Toast, ToastContainer};
 use crate::config::PlateConfig;
 use crate::generator::create_plate;
 use crate::palette::Palette;
@@ -50,12 +50,14 @@ fn App() -> Element {
         )
     });
 
+    let mut toast: Signal<Option<Toast>> = use_signal(|| None);
+
     rsx! {
         document::Link { rel: "stylesheet", href: MAIN_CSS }
 
         div { style: "display: flex; height: 100vh; margin: 0;",
 
-            ControlPanel { config, available_palettes }
+            ControlPanel { config, available_palettes, toast }
 
             match svg_result() {
                 Ok(svg_content) => rsx! {
@@ -71,6 +73,7 @@ fn App() -> Element {
                     }
                 },
             }
+            ToastContainer { toast }
         }
     }
 }

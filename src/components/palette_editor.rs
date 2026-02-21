@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::components::toast::{Toast, ToastType};
-use crate::hex_colour::HexColour;
+use crate::hex_colour;
 use crate::palette::Palette;
 
 use super::colour_picker::ColourPicker;
@@ -14,10 +14,11 @@ pub fn PaletteEditor(
     on_cancel: EventHandler<()>,
 ) -> Element {
     let mut name = use_signal(String::new);
-    let mut colours = use_signal(|| ["#000000ff"; 6].map(String::from));
+    let mut colours = use_signal(|| hex_colour::default_array());
 
-    let mut update_colour = move |i: usize, c: HexColour| {
-        colours.with_mut(|colours| colours[i] = c);
+    let mut reset_form = move || {
+        name.set(String::new());
+        colours.set(hex_colour::default_array());
     };
 
     let handle_save = move |_| {
@@ -29,8 +30,7 @@ pub fn PaletteEditor(
             return;
         }
         on_save.call(Palette::custom(name(), colours()));
-
-        name.set(String::new());
+        reset_form();
     };
 
     let preview = use_memo(move || {
@@ -50,32 +50,34 @@ pub fn PaletteEditor(
                 label { "Preview" }
                 PalettePreview { palette: preview() }
             }
-        }
 
-        div { class: "editor-section",
-            label { "Palette Name" }
-            input {
-                r#type: "text",
-                value: "{name}",
-                placeholder: "My Custom Palette",
-                oninput: move |event| name.set(event.value()),
+            div { class: "editor-section",
+                label { "Palette Name" }
+                input {
+                    r#type: "text",
+                    value: "{name}",
+                    placeholder: "My Custom Palette",
+                    oninput: move |event| name.set(event.value()),
+                }
             }
-        }
-        div { class: "editor-section",
-            label { "Colours" }
-            div { class: "colour-grid",
-                for (i , colour) in colours().iter().enumerate() {
-                    ColourPicker {
-                        key: "{i}",
-                        value: colour.clone(),
-                        on_change: move |colour| update_colour(i, colour),
+            div { class: "editor-section",
+                label { "Colours" }
+                div { class: "colour-grid",
+                    for (i , colour) in colours().iter().enumerate() {
+                        ColourPicker {
+                            key: "{i}",
+                            value: colour.clone(),
+                            on_change: move |colour| {
+                                colours.with_mut(|colours| colours[i] = colour);
+                            },
+                        }
                     }
                 }
             }
-        }
-        div { class: "editor-actions",
-            button { onclick: handle_save, "Save Palette" }
-            button { onclick: move |_| on_cancel.call(()), "Cancel" }
+            div { class: "editor-actions",
+                button { onclick: handle_save, "Save Palette" }
+                button { onclick: move |_| on_cancel.call(()), "Cancel" }
+            }
         }
     }
 }

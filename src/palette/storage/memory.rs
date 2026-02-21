@@ -61,4 +61,8 @@ impl PaletteStorage for InMemoryStorage {
             .cloned()
             .ok_or_else(|| StorageError::NotFound(name.to_string()))
     }
+
+    fn load_all(&self) -> Result<Vec<Palette>, StorageError> {
+        todo!()
+    }
 }

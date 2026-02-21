@@ -125,4 +125,8 @@ impl PaletteStorage for LocalStorage {
 
         Ok(palette)
     }
+
+    fn load_all(&self) -> Result<Vec<Palette>, StorageError> {
+        todo!()
+    }
 }
