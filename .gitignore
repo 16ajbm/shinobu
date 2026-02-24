@@ -18,3 +18,6 @@ target
 
 # Ignore generated plates
 *.svg
+
+# Ignore saved palettes
+palettes/

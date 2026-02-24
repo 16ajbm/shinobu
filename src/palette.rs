@@ -9,7 +9,10 @@ use crate::hex_colour::HexColour;
 
 const COLOURS_PER_PALETTE: usize = 6;
 
-type PaletteName = String;
+/// Name of the `Palette` given by the user, not guaranteed to be unique
+pub type PaletteName = String;
+/// Generated ID of the `Palette`, guaranteed to be unique
+pub type PaletteId = String;
 
 #[derive(Debug, thiserror::Error)]
 #[allow(dead_code)]
@@ -27,8 +30,8 @@ pub enum PaletteError {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Palette {
-    pub id: String,
-    pub display_name: String,
+    pub id: PaletteId,
+    pub display_name: PaletteName,
     pub colours: [HexColour; COLOURS_PER_PALETTE],
     pub is_preset: bool,
 }
@@ -36,14 +39,19 @@ pub struct Palette {
 impl Palette {
     /// Returns all available palettes: presets (+ custom palettes in the future)
     pub fn load_all() -> Vec<Palette> {
-        // Extend to custom loading when in place
-        Self::all_presets()
+        let mut palettes = Self::all_presets();
+
+        if let Ok(custom) = storage::load_all() {
+            palettes.extend(custom);
+        }
+
+        palettes
     }
 
     /// Create a preset palette from colours array with a stable ID
     pub fn preset(
-        id: String,
-        display_name: String,
+        id: PaletteId,
+        display_name: PaletteName,
         colours: [HexColour; COLOURS_PER_PALETTE],
     ) -> Self {
         for colour in &colours {
@@ -62,7 +70,7 @@ impl Palette {
         }
     }
 
-    pub fn custom(display_name: String, colours: [HexColour; COLOURS_PER_PALETTE]) -> Self {
+    pub fn custom(display_name: PaletteName, colours: [HexColour; COLOURS_PER_PALETTE]) -> Self {
         let id = Uuid::new_v4().to_string();
         Self {
             id,

@@ -81,15 +81,6 @@ impl PaletteStorage for LocalStorage {
         false
     }
 
-    fn list(&self) -> Result<Vec<Palette>, StorageError> {
-        let names = self.list_names()?;
-
-        Ok(names
-            .iter()
-            .filter_map(|name| self.load(name).ok())
-            .collect())
-    }
-
     fn list_names(&self) -> Result<Vec<PaletteName>, StorageError> {
         let storage = self.get_storage()?;
         let length = storage.length().map_err(|e| {
@@ -127,6 +118,11 @@ impl PaletteStorage for LocalStorage {
     }
 
     fn load_all(&self) -> Result<Vec<Palette>, StorageError> {
-        todo!()
+        let names = self.list_names()?;
+
+        Ok(names
+            .iter()
+            .filter_map(|name| self.load(name).ok())
+            .collect())
     }
 }

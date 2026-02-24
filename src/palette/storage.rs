@@ -1,5 +1,5 @@
 use super::Palette;
-use crate::palette::PaletteName;
+use crate::palette::{PaletteId, PaletteName};
 
 #[cfg(not(target_arch = "wasm32"))]
 mod filesystem;
@@ -13,22 +13,14 @@ pub trait PaletteStorage {
     /// Saves a `Palette`.
     fn save(&self, palette: &Palette) -> Result<(), StorageError>;
     /// Loads a single `Palette` by name.
-    fn load(&self, name: &PaletteName) -> Result<Palette, StorageError>;
+    fn load(&self, id: &PaletteId) -> Result<Palette, StorageError>;
     fn load_all(&self) -> Result<Vec<Palette>, StorageError>;
     /// Deletes a single `Palette` by name.
-    fn delete(&self, name: &PaletteName) -> Result<(), StorageError>;
+    fn delete(&self, id: &PaletteId) -> Result<(), StorageError>;
     /// Checks if a `Palette` exists.
-    fn exists(&self, name: &PaletteName) -> bool;
+    fn exists(&self, id: &PaletteId) -> bool;
     /// Lists the `name`s of all stored `Palettes`.
     fn list_names(&self) -> Result<Vec<PaletteName>, StorageError>;
-    /// Lists all stored `Palettes`. Defaults to directly `load`-ing each `Palette` by `name`.
-    fn list(&self) -> Result<Vec<Palette>, StorageError> {
-        Ok(self
-            .list_names()?
-            .iter()
-            .filter_map(|name| self.load(name).ok())
-            .collect())
-    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -53,24 +45,20 @@ pub fn load_all() -> Result<Vec<Palette>, StorageError> {
     get_storage().load_all()
 }
 
-pub fn load(name: &PaletteName) -> Result<Palette, StorageError> {
-    get_storage().load(name)
+pub fn load(id: &PaletteId) -> Result<Palette, StorageError> {
+    get_storage().load(id)
 }
 
-pub fn delete(name: &PaletteName) -> Result<(), StorageError> {
-    get_storage().delete(name)
+pub fn delete(id: &PaletteId) -> Result<(), StorageError> {
+    get_storage().delete(id)
 }
 
-pub fn exists(name: &PaletteName) -> bool {
-    get_storage().exists(name)
+pub fn exists(id: &PaletteId) -> bool {
+    get_storage().exists(id)
 }
 
 pub fn list_names() -> Result<Vec<PaletteName>, StorageError> {
     get_storage().list_names()
-}
-
-pub fn list() -> Result<Vec<Palette>, StorageError> {
-    get_storage().list()
 }
 
 fn get_storage() -> Box<dyn PaletteStorage> {
@@ -80,6 +68,6 @@ fn get_storage() -> Box<dyn PaletteStorage> {
     }
     #[cfg(target_arch = "wasm32")]
     {
-        Box::new(local::LocalStorage::default())
+        Box::new(local_storage::LocalStorage::default())
     }
 }

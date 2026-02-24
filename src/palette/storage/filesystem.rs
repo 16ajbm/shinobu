@@ -4,7 +4,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::{Palette, PaletteStorage, StorageError};
-use crate::palette::PaletteName;
+use crate::palette::{PaletteId, PaletteName};
 
 #[derive(Debug, Clone)]
 pub struct FileSystemStorage {
@@ -26,8 +26,8 @@ impl FileSystemStorage {
         Ok(config_dir.join("shinobu").join("palettes"))
     }
 
-    fn palette_path(&self, name: &PaletteName) -> PathBuf {
-        self.base_path.join(format!("{}.json", name))
+    fn palette_path(&self, id: &PaletteId) -> PathBuf {
+        self.base_path.join(format!("{}.json", id))
     }
 
     // TODO - does atomic write (temp file + rename) actually benefit?
@@ -52,18 +52,14 @@ impl PaletteStorage for FileSystemStorage {
         self.write(&path, &data)
     }
 
-    fn delete(&self, name: &PaletteName) -> Result<(), StorageError> {
-        let path = self.palette_path(name);
+    fn delete(&self, id: &PaletteId) -> Result<(), StorageError> {
+        let path = self.palette_path(id);
 
         Ok(fs::remove_file(path)?)
     }
 
-    fn exists(&self, name: &PaletteName) -> bool {
-        self.palette_path(name).exists()
-    }
-
-    fn list(&self) -> Result<Vec<Palette>, StorageError> {
-        todo!()
+    fn exists(&self, id: &PaletteId) -> bool {
+        self.palette_path(id).exists()
     }
 
     fn list_names(&self) -> Result<Vec<PaletteName>, StorageError> {
@@ -83,15 +79,18 @@ impl PaletteStorage for FileSystemStorage {
             .collect::<Vec<PaletteName>>())
     }
 
-    fn load(&self, name: &PaletteName) -> Result<Palette, StorageError> {
-        let path = self.palette_path(name);
+    fn load(&self, id: &PaletteId) -> Result<Palette, StorageError> {
+        let path = self.palette_path(id);
 
         let json = fs::read_to_string(path)?;
 
         Ok(serde_json::from_str(&json)?)
     }
-
     fn load_all(&self) -> Result<Vec<Palette>, StorageError> {
-        todo!()
+        Ok(self
+            .list_names()?
+            .iter()
+            .filter_map(|id| self.load(id).ok())
+            .collect())
     }
 }

@@ -1,13 +1,15 @@
 use super::{ControlGroup, PaletteEditor, PaletteSelector, SliderControl};
 use dioxus::prelude::*;
 
-use crate::components::Toast;
+use crate::components::toast::{Toast};
 use crate::config::PlateConfig;
-use crate::palette::Palette;
+use crate::palette::{Palette, PaletteId};
 
 #[component]
 pub fn ControlPanel(
     mut config: Signal<PlateConfig>,
+    on_save_palette: EventHandler<Palette>,
+    _on_delete_palette: EventHandler<PaletteId>,
     available_palettes: Signal<Vec<Palette>>,
     toast: Signal<Option<Toast>>,
 ) -> Element {
@@ -74,6 +76,7 @@ pub fn ControlPanel(
                 PaletteEditor {
                     toast,
                     on_save: move |palette| {
+                        on_save_palette.call(palette);
                         show_editor.set(false);
                     },
                     on_cancel: move |_| show_editor.set(false),

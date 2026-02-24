@@ -29,16 +29,16 @@ pub fn PaletteSelector(
             // Dropdown selector
             select {
                 style: "width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; cursor: pointer;",
-                value: "{selected.display_name}",
+                value: "{selected.id}",
                 onchange: move |event| {
-                    let selected_name = event.value();
-                    if let Some(palette) = options().iter().find(|p| p.display_name == selected_name)
+                    let selected_id = event.value();
+                    if let Some(palette) = options().iter().find(|p| p.id == selected_id)
                     {
                         on_change.call(palette.clone());
                     }
                 },
                 for palette in options() {
-                    option { value: "{palette.display_name}", "{palette.display_name}" }
+                    option { value: "{palette.id}", "{palette.display_name}" }
                 }
             }
         }
