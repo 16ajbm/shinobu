@@ -53,12 +53,12 @@ impl PaletteStorage for LocalStorage {
         Ok(())
     }
 
-    fn delete(&self, name: &PaletteName) -> Result<(), StorageError> {
+    fn delete(&self, id: &PaletteId) -> Result<(), StorageError> {
         let storage = self.get_storage()?;
-        let key = self.prefix_key(&name);
+        let key = self.prefix_key(&id);
 
-        if !self.exists(name) {
-            return Err(StorageError::NotFound(name.to_string()));
+        if !self.exists(id) {
+            return Err(StorageError::NotFound(id.to_string()));
         }
 
         storage.remove_item(&key).map_err(|e| {
@@ -72,8 +72,8 @@ impl PaletteStorage for LocalStorage {
         Ok(())
     }
 
-    fn exists(&self, name: &PaletteName) -> bool {
-        let key = self.prefix_key(&name);
+    fn exists(&self, id: &PaletteId) -> bool {
+        let key = self.prefix_key(&id);
 
         if let Ok(storage) = self.get_storage() {
             return storage.get_item(&key).ok().is_some();

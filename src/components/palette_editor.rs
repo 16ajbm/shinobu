@@ -14,7 +14,7 @@ pub fn PaletteEditor(
     on_cancel: EventHandler<()>,
 ) -> Element {
     let mut name = use_signal(String::new);
-    let mut colours = use_signal(|| hex_colour::default_array());
+    let mut colours = use_signal(hex_colour::default_array);
 
     let mut reset_form = move || {
         name.set(String::new());

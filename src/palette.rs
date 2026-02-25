@@ -65,7 +65,7 @@ impl Palette {
         Self {
             id,
             display_name,
-            colours: colours,
+            colours,
             is_preset: true,
         }
     }

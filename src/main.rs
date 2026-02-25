@@ -69,6 +69,7 @@ fn App() -> Element {
                                     toast_type: ToastType::Error,
                                 }),
                             );
+                        return;
                     }
                     available_palettes.set(Palette::load_all());
                     toast
@@ -88,6 +89,7 @@ fn App() -> Element {
                                     toast_type: ToastType::Error,
                                 }),
                             )
+                        return;
                     }
                     available_palettes.set(Palette::load_all());
                     toast

@@ -21,7 +21,7 @@ impl FileSystemStorage {
     }
 
     pub fn default_path() -> Result<PathBuf, StorageError> {
-        let config_dir = dirs::config_dir().ok_or_else(|| StorageError::PermissionDenied)?;
+        let config_dir = dirs::config_dir().ok_or(StorageError::PermissionDenied)?;
 
         Ok(config_dir.join("shinobu").join("palettes"))
     }
