@@ -4,6 +4,7 @@ use crate::palette::{PaletteId, PaletteName};
 #[cfg(not(target_arch = "wasm32"))]
 mod filesystem;
 #[cfg(not(target_arch = "wasm32"))]
+#[allow(dead_code)]
 mod in_memory;
 #[cfg(target_arch = "wasm32")]
 mod local_storage;
@@ -34,6 +35,8 @@ pub enum StorageError {
     #[error("Palette not found: {0}")]
     NotFound(String),
     #[error("Unknown error: {0}")]
+    #[allow(dead_code)]
+
     Error(String),
 }
 
@@ -45,6 +48,9 @@ pub fn load_all() -> Result<Vec<Palette>, StorageError> {
     get_storage().load_all()
 }
 
+
+#[allow(dead_code)]
+
 pub fn load(id: &PaletteId) -> Result<Palette, StorageError> {
     get_storage().load(id)
 }
@@ -53,9 +59,12 @@ pub fn delete(id: &PaletteId) -> Result<(), StorageError> {
     get_storage().delete(id)
 }
 
+#[allow(dead_code)]
 pub fn exists(id: &PaletteId) -> bool {
     get_storage().exists(id)
 }
+
+#[allow(dead_code)]
 
 pub fn list_names() -> Result<Vec<PaletteName>, StorageError> {
     get_storage().list_names()

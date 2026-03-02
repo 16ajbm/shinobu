@@ -2,9 +2,11 @@ mod components;
 mod config;
 mod generator;
 mod hex_colour;
+#[allow(dead_code)]
 mod image_processor;
 mod palette;
 mod plate;
+#[cfg(test)]
 mod test_utils;
 
 use dioxus::prelude::*;
