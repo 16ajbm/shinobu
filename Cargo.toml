@@ -29,6 +29,7 @@ wasm-bindgen = "0.2.105"
 web-sys = { version = "0.3.82", features = ["Window", "Storage", "DomException", "Document", "Element", "HtmlAnchorElement", "Blob", "Url", "Navigator", "Clipboard"] }
 dirs = "6.0.0"
 uuid = { version = "1.21.0", features = ["v4"] }
+proptest = "1.8.0"
 
 [dev-dependencies]
 proptest = "1.8.0"

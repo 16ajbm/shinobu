@@ -5,6 +5,7 @@ mod hex_colour;
 mod image_processor;
 mod palette;
 mod plate;
+mod test_utils;
 
 use dioxus::prelude::*;
 
@@ -88,7 +89,7 @@ fn App() -> Element {
                                     message: format!("Failed to delete palette: {}", err),
                                     toast_type: ToastType::Error,
                                 }),
-                            )
+                            );
                         return;
                     }
                     available_palettes.set(Palette::load_all());

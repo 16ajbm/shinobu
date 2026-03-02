@@ -1,7 +1,6 @@
 use proptest::prelude::*;
 
 use crate::hex_colour::HexColour;
-use crate::palette::Palette;
 
 pub fn hex_colour() -> impl Strategy<Value = HexColour> {
     prop_oneof![

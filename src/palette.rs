@@ -5,7 +5,7 @@ use uuid::Uuid;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::hex_colour::HexColour;
+use crate::{hex_colour, hex_colour::HexColour};
 
 const COLOURS_PER_PALETTE: usize = 6;
 
@@ -56,7 +56,7 @@ impl Palette {
     ) -> Self {
         for colour in &colours {
             assert!(
-                Self::is_valid_hex_colour(colour),
+                hex_colour::is_valid(colour),
                 "Invalid hex colour: '{}'",
                 colour
             )
@@ -90,20 +90,6 @@ impl Palette {
         } else {
             Ok(())
         }
-    }
-
-    fn is_valid_hex_colour(colour: &HexColour) -> bool {
-        if !colour.starts_with('#') {
-            return false;
-        }
-
-        let hex = &colour[1..];
-
-        if hex.len() != 6 && hex.len() != 8 {
-            return false;
-        }
-
-        hex.chars().all(|c| c.is_ascii_hexdigit())
     }
 
     /// Get all built-in preset palettes
@@ -179,14 +165,9 @@ impl Default for Palette {
 }
 
 #[cfg(test)]
-mod test_utils;
-
-#[cfg(test)]
 mod tests {
-    use crate::palette::test_utils;
 
     use super::*;
-    use proptest::prelude::*;
 
     #[test]
     #[should_panic(expected = "Invalid hex colour")]
@@ -197,11 +178,4 @@ mod tests {
             ["bad"; 6].map(String::from),
         );
     }
-
-    proptest!(
-        #[test]
-        fn test_is_valid_hex_colour(colour in test_utils::hex_colour()) {
-            assert!(Palette::is_valid_hex_colour(&colour));
-        }
-    );
 }

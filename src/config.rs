@@ -61,6 +61,6 @@ impl PlateConfig {
 
 impl Default for PlateConfig {
     fn default() -> Self {
-        todo!()
+        Self::new(800, 600, 10, 0.3, 1.0)
     }
 }

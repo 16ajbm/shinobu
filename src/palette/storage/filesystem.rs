@@ -30,7 +30,6 @@ impl FileSystemStorage {
         self.base_path.join(format!("{}.json", id))
     }
 
-    // TODO - does atomic write (temp file + rename) actually benefit?
     fn write(&self, path: &PathBuf, data: &str) -> Result<(), StorageError> {
         Ok(fs::write(path, data)?)
     }

@@ -3,10 +3,10 @@ use crate::palette::{PaletteId, PaletteName};
 
 #[cfg(not(target_arch = "wasm32"))]
 mod filesystem;
-#[cfg(target_arch = "wasm32")]
-mod local_storage;
 #[cfg(not(target_arch = "wasm32"))]
 mod in_memory;
+#[cfg(target_arch = "wasm32")]
+mod local_storage;
 
 /// Storage abstraction for `Palette` persistence. Each `Palette` is stored individually, keyed by it's `name`.
 pub trait PaletteStorage {

@@ -44,7 +44,6 @@ impl PaletteStorage for LocalStorage {
 
         storage.set_item(&key, &json).map_err(|e| {
             if let Some(err) = e.dyn_ref::<web_sys::DomException>() {
-                // TODO - something more applicable
                 return StorageError::Error(err.name());
             }
             StorageError::PermissionDenied
@@ -63,7 +62,6 @@ impl PaletteStorage for LocalStorage {
 
         storage.remove_item(&key).map_err(|e| {
             if let Some(err) = e.dyn_ref::<web_sys::DomException>() {
-                // TODO - something more applicable
                 return StorageError::Error(err.name());
             }
             StorageError::PermissionDenied
@@ -85,7 +83,6 @@ impl PaletteStorage for LocalStorage {
         let storage = self.get_storage()?;
         let length = storage.length().map_err(|e| {
             if let Some(err) = e.dyn_ref::<web_sys::DomException>() {
-                // TODO - something more applicable
                 return StorageError::Error(err.name());
             }
             StorageError::PermissionDenied
@@ -111,7 +108,6 @@ impl PaletteStorage for LocalStorage {
             })?
             .ok_or_else(|| StorageError::NotFound(key.to_string()))?;
 
-        // TODO - determine how this line can be skipped without having to bring in (unnecessary) deserialization
         let palette: Palette = serde_json::from_str(&json)?;
 
         Ok(palette)
