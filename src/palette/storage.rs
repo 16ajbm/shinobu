@@ -36,7 +36,6 @@ pub enum StorageError {
     NotFound(String),
     #[error("Unknown error: {0}")]
     #[allow(dead_code)]
-
     Error(String),
 }
 
@@ -47,7 +46,6 @@ pub fn save(palette: &Palette) -> Result<(), StorageError> {
 pub fn load_all() -> Result<Vec<Palette>, StorageError> {
     get_storage().load_all()
 }
-
 
 #[allow(dead_code)]
 
