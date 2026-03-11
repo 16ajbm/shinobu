@@ -52,9 +52,11 @@ impl PaletteStorage for FileSystemStorage {
     }
 
     fn delete(&self, id: &PaletteId) -> Result<(), StorageError> {
-        let path = self.palette_path(id);
+        if !self.exists(id) {
+            return Err(StorageError::NotFound(id.to_string()));
+        }
 
-        Ok(fs::remove_file(path)?)
+        Ok(fs::remove_file(self.palette_path(id))?)
     }
 
     fn exists(&self, id: &PaletteId) -> bool {

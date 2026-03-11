@@ -27,7 +27,7 @@ pub trait PaletteStorage {
 #[derive(Debug, thiserror::Error)]
 pub enum StorageError {
     #[error("I/O error: {0}")]
-    IOError(#[from] std::io::Error),
+    IOError(std::io::Error),
     #[error("Serialization error: {0}")]
     SerializationError(#[from] serde_json::Error),
     #[error("Permission denied")]
@@ -37,6 +37,16 @@ pub enum StorageError {
     #[error("Unknown error: {0}")]
     #[allow(dead_code)]
     Error(String),
+}
+
+impl From<std::io::Error> for StorageError {
+    fn from(err: std::io::Error) -> Self {
+        if err.kind() == std::io::ErrorKind::NotFound {
+            StorageError::NotFound(err.to_string())
+        } else {
+            StorageError::IOError(err)
+        }
+    }
 }
 
 pub fn save(palette: &Palette) -> Result<(), StorageError> {
