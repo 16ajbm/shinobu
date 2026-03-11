@@ -9,7 +9,7 @@ mod in_memory;
 #[cfg(any(target_arch = "wasm32", test))]
 mod local_storage;
 
-/// Storage abstraction for `Palette` persistence. Each `Palette` is stored individually, keyed by it's `name`.
+/// Storage abstraction for `Palette` persistence. Each `Palette` is stored individually, keyed by it's `PaletteId`.
 pub trait PaletteStorage {
     /// Saves a `Palette`.
     fn save(&self, palette: &Palette) -> Result<(), StorageError>;
