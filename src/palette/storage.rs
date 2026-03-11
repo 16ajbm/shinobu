@@ -6,7 +6,7 @@ mod filesystem;
 #[cfg(not(target_arch = "wasm32"))]
 #[allow(dead_code)]
 mod in_memory;
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(target_arch = "wasm32", test))]
 mod local_storage;
 
 /// Storage abstraction for `Palette` persistence. Each `Palette` is stored individually, keyed by it's `name`.

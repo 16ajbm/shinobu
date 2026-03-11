@@ -41,12 +41,12 @@ mod tests {
 
     proptest!(
         #[test]
-        fn test_is_valid(colour in test_utils::hex_colour()) {
+        fn test_is_valid(colour in test_utils::hex_colour_strategy()) {
             assert!(is_valid(&colour));
         }
 
         #[test]
-        fn test_normalize(colour in test_utils::hex_colour()) {
+        fn test_normalize(colour in test_utils::hex_colour_strategy()) {
             let unnormalized = &colour[1..];
 
             assert!(!is_valid(&unnormalized.to_string()));

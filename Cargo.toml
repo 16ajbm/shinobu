@@ -17,7 +17,6 @@ mobile = ["dioxus/mobile"]
 [dependencies]
 dioxus = { version = "0.7.2", features = ["router"] }
 async-std = "1.13.0"
-getrandom = { version = "0.3", features = ["wasm_js"] }
 image = "0.25.7"
 js-sys = "0.3.82"
 rand = "0.9.2"
@@ -30,6 +29,7 @@ web-sys = { version = "0.3.82", features = ["Window", "Storage", "DomException",
 dirs = "6.0.0"
 uuid = { version = "1.21.0", features = ["v4"] }
 proptest = "1.8.0"
+fake = "4.4.0"
 
 [dev-dependencies]
 proptest = "1.8.0"

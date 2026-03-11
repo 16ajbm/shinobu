@@ -1,9 +1,9 @@
 //! Storage implementation that saves palettes to a browser's local storage.
 
-use wasm_bindgen::{JsCast, JsValue};
+use wasm_bindgen::JsCast;
 use web_sys::window;
 
-use super::{Palette, PaletteStorage, StorageError};
+use super::{Palette, PaletteId, PaletteStorage, StorageError};
 use crate::palette::PaletteName;
 
 #[derive(Debug, Clone)]
@@ -13,11 +13,18 @@ pub struct LocalStorage {
 
 impl LocalStorage {
     pub fn new(prefix: String) -> Self {
+        // The prefix is for distinguishing entitities related to the application
+        // across the flat key-value store of localStorage. If anything, it's an
+        // exercise.
         Self { prefix }
     }
 
-    pub fn prefix_key(&self, name: &PaletteName) -> String {
-        format!("{}{}", self.prefix, name)
+    pub fn prefix_key(&self, id: &PaletteId) -> String {
+        format!("{}{}", self.prefix, id)
+    }
+
+    pub fn strip_prefix(&self, key: &String) -> PaletteId {
+        key.replace(&self.prefix, "")
     }
 
     pub fn get_storage(&self) -> Result<web_sys::Storage, StorageError> {
@@ -91,12 +98,13 @@ impl PaletteStorage for LocalStorage {
         Ok((0..length)
             .filter_map(|i| storage.key(i).ok().flatten())
             .filter(|key| key.starts_with(&self.prefix))
+            .map(|key| self.strip_prefix(&key))
             .collect())
     }
 
-    fn load(&self, name: &PaletteName) -> Result<Palette, StorageError> {
+    fn load(&self, id: &PaletteId) -> Result<Palette, StorageError> {
         let storage = self.get_storage()?;
-        let key = self.prefix_key(&name);
+        let key = self.prefix_key(&id);
 
         let json = storage
             .get_item(&key)
@@ -106,7 +114,7 @@ impl PaletteStorage for LocalStorage {
                 }
                 StorageError::PermissionDenied
             })?
-            .ok_or_else(|| StorageError::NotFound(key.to_string()))?;
+            .ok_or_else(|| StorageError::NotFound(id.to_string()))?;
 
         let palette: Palette = serde_json::from_str(&json)?;
 
@@ -120,5 +128,40 @@ impl PaletteStorage for LocalStorage {
             .iter()
             .filter_map(|name| self.load(name).ok())
             .collect())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::test_utils;
+
+    use fake::{Fake, Faker};
+
+    fn local_storage() -> LocalStorage {
+        LocalStorage::new(Faker.fake())
+    }
+
+    #[test]
+    fn prefix_key_adds_prefix() {
+        let palette = test_utils::palette();
+        let storage = local_storage();
+
+        let prefixed_key = storage.prefix_key(&palette.id);
+
+        assert!(prefixed_key.starts_with(&storage.prefix))
+    }
+
+    #[test]
+    fn strip_prefix_removes_prefix() {
+        let palette = test_utils::palette();
+        let storage = local_storage();
+
+        let prefixed_key = storage.prefix_key(&palette.id);
+
+        assert!(!storage
+            .strip_prefix(&prefixed_key)
+            .starts_with(&storage.prefix))
     }
 }
