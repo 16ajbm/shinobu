@@ -81,7 +81,7 @@ impl PaletteStorage for LocalStorage {
         let key = self.prefix_key(&id);
 
         if let Ok(storage) = self.get_storage() {
-            return storage.get_item(&key).ok().is_some();
+            return matches!(storage.get_item(&key), Ok(Some(_)));
         }
         false
     }
