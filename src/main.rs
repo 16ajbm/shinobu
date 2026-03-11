@@ -83,7 +83,7 @@ fn App() -> Element {
                             }),
                         )
                 },
-                on_delete_palette: move |id: PaletteId| {
+                _on_delete_palette: move |id: PaletteId| {
                     if let Err(err) = storage::delete(&id) {
                         toast
                             .set(

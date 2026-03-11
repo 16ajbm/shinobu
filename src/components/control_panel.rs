@@ -9,7 +9,7 @@ use crate::palette::{Palette, PaletteId};
 pub fn ControlPanel(
     mut config: Signal<PlateConfig>,
     on_save_palette: EventHandler<Palette>,
-    on_delete_palette: EventHandler<PaletteId>,
+    _on_delete_palette: EventHandler<PaletteId>,
     available_palettes: Signal<Vec<Palette>>,
     toast: Signal<Option<Toast>>,
 ) -> Element {
