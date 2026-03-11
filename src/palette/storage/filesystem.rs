@@ -37,8 +37,18 @@ impl FileSystemStorage {
 
 impl Default for FileSystemStorage {
     fn default() -> Self {
-        Self::new(Self::default_path().expect("Failed to get default path"))
-            .expect("Failed to initialize FileSystemStorage with default path")
+        if let Ok(path) = Self::default_path() {
+            if let Ok(storage) = Self::new(path) {
+                return storage;
+            }
+        }
+        let fallback_path = std::env::temp_dir().join("shinobu").join("palettes");
+
+        let _ = fs::create_dir_all(&fallback_path);
+
+        FileSystemStorage {
+            base_path: fallback_path,
+        }
     }
 }
 
