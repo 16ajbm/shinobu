@@ -16,11 +16,13 @@ pub fn ColourPicker(value: HexColour, on_change: EventHandler<HexColour>) -> Ele
     rsx! {
         div { class: "colour-picker",
             input {
+                aria_label: "Colour Picker",
                 r#type: "color",
                 value: "{rgb_only}",
                 oninput: move |event| on_change.call(format!("{}ff", event.value())),
             }
             input {
+                aria_label: "Hex Colour Input",
                 r#type: "text",
                 value: "{mutable_value}",
                 style: "{border_style}",
