@@ -51,7 +51,10 @@ mod tests {
 
             assert!(!is_valid(&unnormalized.to_string()));
 
-            assert!(is_valid(&normalize(unnormalized)));
+            let normalized = normalize(unnormalized);
+
+            assert!(normalized.starts_with('#'));
+            assert!(is_valid(&normalized));
         }
     );
 }
