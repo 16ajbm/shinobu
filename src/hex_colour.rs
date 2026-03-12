@@ -50,7 +50,8 @@ mod tests {
             let unnormalized = &colour[1..];
 
             assert!(!is_valid(&unnormalized.to_string()));
-            assert!(is_valid(&colour));
+
+            assert!(is_valid(&normalize(unnormalized)));
         }
     );
 }
