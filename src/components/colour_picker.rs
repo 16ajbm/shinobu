@@ -19,7 +19,11 @@ pub fn ColourPicker(value: HexColour, on_change: EventHandler<HexColour>) -> Ele
                 aria_label: "Colour Picker",
                 r#type: "color",
                 value: "{rgb_only}",
-                oninput: move |event| on_change.call(format!("{}ff", event.value())),
+                oninput: move |event| {
+                    let colour = format!("{}ff", event.value());
+                    mutable_value.set(colour.clone());
+                    on_change.call(colour);
+                },
             }
             input {
                 aria_label: "Hex Colour Input",
