@@ -13,7 +13,7 @@ pub struct LocalStorage {
 
 impl LocalStorage {
     pub fn new(prefix: String) -> Self {
-        // The prefix is for distinguishing entitities related to the application
+        // The prefix is for distinguishing entities related to the application
         // across the flat key-value store of localStorage. If anything, it's an
         // exercise.
         Self { prefix }
