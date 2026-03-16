@@ -24,7 +24,11 @@ impl LocalStorage {
     }
 
     pub fn strip_prefix(&self, key: &String) -> PaletteId {
-        key.replace(&self.prefix, "")
+        if let Some(stripped) = key.strip_prefix(&self.prefix) {
+            stripped.to_string()
+        } else {
+            key.to_string()
+        }
     }
 
     pub fn get_storage(&self) -> Result<web_sys::Storage, StorageError> {
