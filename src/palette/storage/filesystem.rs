@@ -42,6 +42,8 @@ impl Default for FileSystemStorage {
                 return storage;
             }
         }
+
+        // Should we propogate errors for the default storage path instead of silently falling back to a temp directory? 
         let fallback_path = std::env::temp_dir().join("shinobu").join("palettes");
 
         let _ = fs::create_dir_all(&fallback_path);

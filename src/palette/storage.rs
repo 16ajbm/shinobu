@@ -1,3 +1,5 @@
+use std::sync::OnceLock;
+
 use super::Palette;
 use crate::palette::{PaletteId, PaletteName};
 
@@ -8,6 +10,14 @@ mod filesystem;
 mod in_memory;
 #[cfg(any(target_arch = "wasm32", test))]
 mod local_storage;
+
+#[cfg(not(target_arch = "wasm32"))]
+type Storage = filesystem::FileSystemStorage;
+
+#[cfg(target_arch = "wasm32")]
+type Storage = local_storage::LocalStorage;
+
+static STORAGE: OnceLock<Storage> = OnceLock::new();
 
 /// Storage abstraction for `Palette` persistence. Each `Palette` is stored individually, keyed by it's `PaletteId`.
 pub trait PaletteStorage {
@@ -78,13 +88,6 @@ pub fn list_names() -> Result<Vec<PaletteName>, StorageError> {
     get_storage().list_names()
 }
 
-fn get_storage() -> Box<dyn PaletteStorage> {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        Box::new(filesystem::FileSystemStorage::default())
-    }
-    #[cfg(target_arch = "wasm32")]
-    {
-        Box::new(local_storage::LocalStorage::default())
-    }
+fn get_storage() -> &'static Storage {
+    STORAGE.get_or_init(|| Storage::default())
 }
