@@ -7,6 +7,11 @@ pub fn ColourPicker(value: HexColour, on_change: EventHandler<HexColour>) -> Ele
 
     let mut mutable_value = use_signal(|| value.clone());
 
+    // Synchronize the internal mutable state
+    use_effect(move || {
+        mutable_value.set(value.clone());
+    });
+
     let border_style = if is_valid(&mutable_value()) {
         "border: 1px solid #ccc;"
     } else {
