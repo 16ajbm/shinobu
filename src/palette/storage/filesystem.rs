@@ -76,20 +76,11 @@ impl PaletteStorage for FileSystemStorage {
     }
 
     fn list_names(&self) -> Result<Vec<PaletteName>, StorageError> {
-        let entries = fs::read_dir(&self.base_path)?;
-
-        Ok(entries
-            .filter_map(|entry| {
-                let entry = entry.ok()?;
-                let path = entry.path();
-
-                if path.extension()?.to_str()? == "json" {
-                    Some(path.file_stem()?.to_str()?.to_string())
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<PaletteName>>())
+        Ok(self
+            .load_all()?
+            .iter()
+            .map(|palette| palette.display_name.clone())
+            .collect())
     }
 
     fn load(&self, id: &PaletteId) -> Result<Palette, StorageError> {

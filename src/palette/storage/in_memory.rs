@@ -47,7 +47,11 @@ impl PaletteStorage for InMemoryStorage {
     }
 
     fn list_names(&self) -> Result<Vec<PaletteName>, StorageError> {
-        Ok(self.data.borrow().keys().cloned().collect())
+        Ok(self
+            .load_all()?
+            .iter()
+            .map(|palette| palette.display_name.clone())
+            .collect())
     }
 
     fn load(&self, id: &PaletteId) -> Result<Palette, StorageError> {

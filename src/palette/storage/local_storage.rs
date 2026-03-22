@@ -91,18 +91,10 @@ impl PaletteStorage for LocalStorage {
     }
 
     fn list_names(&self) -> Result<Vec<PaletteName>, StorageError> {
-        let storage = self.get_storage()?;
-        let length = storage.length().map_err(|e| {
-            if let Some(err) = e.dyn_ref::<web_sys::DomException>() {
-                return StorageError::Error(err.name());
-            }
-            StorageError::PermissionDenied
-        })?;
-
-        Ok((0..length)
-            .filter_map(|i| storage.key(i).ok().flatten())
-            .filter(|key| key.starts_with(&self.prefix))
-            .map(|key| self.strip_prefix(&key))
+        Ok(self
+            .load_all()?
+            .iter()
+            .map(|palette| palette.display_name.clone())
             .collect())
     }
 
