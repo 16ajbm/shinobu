@@ -5,6 +5,7 @@ use std::time::Duration;
 pub enum ToastType {
     Success,
     Error,
+    #[allow(dead_code)]
     Info,
 }
 

@@ -9,9 +9,8 @@ use crate::palette::Palette;
 
 pub use self::point::Point;
 use crate::config::PlateConfig;
+use crate::hex_colour::HexColour;
 use crate::plate::{Dot, Plate};
-
-pub type HexColour = String;
 
 const DEFAULT_IMAGE_BYTES: &[u8] =
     include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/extras/seven.png"));

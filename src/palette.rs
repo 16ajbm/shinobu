@@ -1,9 +1,18 @@
+pub mod storage;
+
+use uuid::Uuid;
+
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::config::HexColour;
+use crate::{hex_colour, hex_colour::HexColour};
 
 const COLOURS_PER_PALETTE: usize = 6;
+
+/// Name of the `Palette` given by the user, not guaranteed to be unique
+pub type PaletteName = String;
+/// Generated ID of the `Palette`, guaranteed to be unique
+pub type PaletteId = String;
 
 #[derive(Debug, thiserror::Error)]
 #[allow(dead_code)]
@@ -21,8 +30,8 @@ pub enum PaletteError {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Palette {
-    pub id: String,
-    pub display_name: String,
+    pub id: PaletteId,
+    pub display_name: PaletteName,
     pub colours: [HexColour; COLOURS_PER_PALETTE],
     pub is_preset: bool,
 }
@@ -30,19 +39,24 @@ pub struct Palette {
 impl Palette {
     /// Returns all available palettes: presets (+ custom palettes in the future)
     pub fn load_all() -> Vec<Palette> {
-        // Extend to custom loading when in place
-        Self::all_presets()
+        let mut palettes = Self::all_presets();
+
+        if let Ok(custom) = storage::load_all() {
+            palettes.extend(custom);
+        }
+
+        palettes
     }
 
     /// Create a preset palette from colours array with a stable ID
     pub fn preset(
-        id: String,
-        display_name: String,
+        id: PaletteId,
+        display_name: PaletteName,
         colours: [HexColour; COLOURS_PER_PALETTE],
     ) -> Self {
         for colour in &colours {
             assert!(
-                Self::is_valid_hex_colour(colour),
+                hex_colour::is_valid(colour),
                 "Invalid hex colour: '{}'",
                 colour
             )
@@ -51,8 +65,18 @@ impl Palette {
         Self {
             id,
             display_name,
-            colours: colours,
+            colours,
             is_preset: true,
+        }
+    }
+
+    pub fn custom(display_name: PaletteName, colours: [HexColour; COLOURS_PER_PALETTE]) -> Self {
+        let id = Uuid::new_v4().to_string();
+        Self {
+            id,
+            display_name,
+            colours,
+            is_preset: false,
         }
     }
 
@@ -66,20 +90,6 @@ impl Palette {
         } else {
             Ok(())
         }
-    }
-
-    fn is_valid_hex_colour(colour: &HexColour) -> bool {
-        if !colour.starts_with('#') {
-            return false;
-        }
-
-        let hex = &colour[1..];
-
-        if hex.len() != 6 && hex.len() != 8 {
-            return false;
-        }
-
-        hex.chars().all(|c| c.is_ascii_hexdigit())
     }
 
     /// Get all built-in preset palettes
@@ -155,18 +165,9 @@ impl Default for Palette {
 }
 
 #[cfg(test)]
-mod test_utils;
-
-#[cfg(test)]
 mod tests {
-    use crate::palette::test_utils;
 
     use super::*;
-    use proptest::prelude::*;
-
-    // Helper
-    // fn assert_valid_hex_colour(colour: &str) {
-    // }
 
     #[test]
     #[should_panic(expected = "Invalid hex colour")]
@@ -177,11 +178,4 @@ mod tests {
             ["bad"; 6].map(String::from),
         );
     }
-
-    proptest!(
-        #[test]
-        fn test_is_valid_hex_colour(colour in test_utils::hex_colour()) {
-            assert!(Palette::is_valid_hex_colour(&colour));
-        }
-    );
 }

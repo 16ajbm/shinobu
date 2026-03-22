@@ -1,7 +1,7 @@
 use crate::palette::Palette;
 use rand::Rng;
 
-pub type HexColour = String;
+use crate::hex_colour::HexColour;
 
 #[derive(Debug, Clone)]
 pub struct PlateConfig {
@@ -61,6 +61,6 @@ impl PlateConfig {
 
 impl Default for PlateConfig {
     fn default() -> Self {
-        todo!()
+        Self::new(800, 600, 10, 0.3, 1.0)
     }
 }

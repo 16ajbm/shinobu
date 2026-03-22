@@ -17,10 +17,10 @@ Run the following command in the root of your project to start developing with t
 dx serve --platform web
 ```
 
+It will be served at [http://127.0.0.1:8080/shinobu](http://127.0.0.1:8080/shinobu).
+
 To run for a different platform, use the `--platform platform` flag. E.g.
 
 ```bash
 dx serve --platform desktop
 ```
-
-It will be served at [http://127.0.0.1:8080/shinobu](http://127.0.0.1:8080/shinobu)
