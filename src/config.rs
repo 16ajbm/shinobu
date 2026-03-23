@@ -1,5 +1,4 @@
 use crate::palette::Palette;
-use rand::Rng;
 
 use crate::hex_colour::HexColour;
 

@@ -1,4 +1,3 @@
-use rand::Rng;
 
 use crate::config::PlateConfig;
 use crate::generator::{colour_source::ColourSource, point::Point};
