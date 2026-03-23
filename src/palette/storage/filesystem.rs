@@ -78,8 +78,8 @@ impl PaletteStorage for FileSystemStorage {
     fn list_names(&self) -> Result<Vec<PaletteName>, StorageError> {
         Ok(self
             .load_all()?
-            .iter()
-            .map(|palette| palette.display_name.clone())
+            .into_iter()
+            .map(|palette| palette.display_name)
             .collect())
     }
 
