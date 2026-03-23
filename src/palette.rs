@@ -2,7 +2,6 @@ pub mod storage;
 
 use uuid::Uuid;
 
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::{hex_colour, hex_colour::HexColour};
@@ -108,7 +107,7 @@ impl Palette {
     }
 
     pub fn random_colour(&self) -> HexColour {
-        let index = rand::rng().random_range(0..COLOURS_PER_PALETTE);
+        let index = rand::random_range(0..COLOURS_PER_PALETTE);
         self.colours[index].clone()
     }
 

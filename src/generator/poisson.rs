@@ -1,4 +1,3 @@
-use rand::Rng;
 
 use crate::generator::Point;
 
@@ -53,7 +52,7 @@ impl PoissonSampler {
         self.active_list.push(0);
 
         while !self.active_list.is_empty() {
-            let active_idx = rand::rng().random_range(0..self.active_list.len());
+            let active_idx = rand::random_range(0..self.active_list.len());
             let sample_idx = self.active_list[active_idx];
             let center = &self.sample_list[sample_idx as usize];
 

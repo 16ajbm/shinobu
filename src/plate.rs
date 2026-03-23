@@ -49,7 +49,7 @@ impl Plate {
 
     pub fn fill_gaps(&mut self, attempts: usize, colour_source: &dyn ColourSource) {
         for _ in 0..attempts {
-            let position = self.random_position(&mut rand::rng());
+            let position = self.random_position();
 
             if let Some(max_radius) = self.max_dot_size_at(&position) {
                 let desired_size = self.config.random_dot_size();
@@ -111,10 +111,10 @@ impl Plate {
     }
 
     /// Generate a random position within the plate bounds
-    fn random_position(&self, rng: &mut impl Rng) -> Point {
+    fn random_position(&self) -> Point {
         Point {
-            x: rng.random_range(0.0..self.config.width as f32),
-            y: rng.random_range(0.0..self.config.height as f32),
+            x: rand::random_range(0.0..self.config.width as f32),
+            y: rand::random_range(0.0..self.config.height as f32),
         }
     }
 }
