@@ -89,5 +89,5 @@ pub fn list_names() -> Result<Vec<PaletteName>, StorageError> {
 }
 
 fn get_storage() -> &'static Storage {
-    STORAGE.get_or_init(|| Storage::default())
+    STORAGE.get_or_init(Storage::default)
 }
