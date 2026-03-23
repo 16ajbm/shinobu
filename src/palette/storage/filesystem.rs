@@ -91,22 +91,20 @@ impl PaletteStorage for FileSystemStorage {
         Ok(serde_json::from_str(&json)?)
     }
     fn load_all(&self) -> Result<Vec<Palette>, StorageError> {
-        let mut palettes = Vec::new();
+        // Read all JSON files in the base directory, skipping any that fail to load.
+        let palettes: Vec<Palette> = fs::read_dir(&self.base_path)?
+            .filter_map(Result::ok)
+            .filter_map(|entry| {
+                let path = entry.path();
 
-        for entry in fs::read_dir(&self.base_path)? {
-            let entry = entry?;
-            let path = entry.path();
-
-            if path.extension().and_then(|ext| ext.to_str()) == Some("json") {
-                let id = path.file_stem().and_then(|stem| stem.to_str());
-
-                if let Some(id) = id {
-                    if let Ok(palette) = self.load(&id.to_string()) {
-                        palettes.push(palette);
-                    }
+                if path.extension()?.to_str()? == "json" {
+                    path.file_stem()?.to_str().map(|id| id.to_string())
+                } else {
+                    None
                 }
-            }
-        }
+            })
+            .filter_map(|id| self.load(&id).ok())
+            .collect();
 
         Ok(palettes)
     }
