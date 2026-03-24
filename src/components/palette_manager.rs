@@ -41,9 +41,7 @@ pub fn PaletteManager(props: PaletteManagerProps) -> Element {
     let mut focused_palette_id = use_signal(|| None::<PaletteId>);
 
     if !props.is_open {
-        return rsx!(
-            {}
-        );
+        return rsx!({});
     }
 
     let detail_palette_id = focused_palette_id()
