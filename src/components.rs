@@ -2,6 +2,7 @@ mod colour_picker;
 mod control_group;
 mod control_panel;
 mod palette_editor;
+mod palette_manager;
 mod palette_preview;
 mod palette_selector;
 mod slider_control;
