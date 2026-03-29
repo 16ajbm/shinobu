@@ -77,40 +77,28 @@ fn App() -> Element {
                         if let Err(err) = storage::save(&palette) {
                             toast
                                 .set(
-                                    Some(Toast {
-                                        message: format!("Failed to save palette: {}", err),
-                                        toast_type: ToastType::Error,
-                                    }),
+                                    Some(Toast::error(format!("Failed to save palette: {}", err))),
                                 );
                             return;
                         }
                         available_palettes.set(Palette::load_all());
                         toast
                             .set(
-                                Some(Toast {
-                                    message: "Palette saved successfully!".to_string(),
-                                    toast_type: ToastType::Success,
-                                }),
+                                Some(Toast::success("Palette saved successfully!".to_string())),
                             )
                     },
                     _on_delete_palette: move |id: PaletteId| {
                         if let Err(err) = storage::delete(&id) {
                             toast
                                 .set(
-                                    Some(Toast {
-                                        message: format!("Failed to delete palette: {}", err),
-                                        toast_type: ToastType::Error,
-                                    }),
+                                    Some(Toast::error(format!("Failed to delete palette: {}", err))),
                                 );
                             return;
                         }
                         available_palettes.set(Palette::load_all());
                         toast
                             .set(
-                                Some(Toast {
-                                    message: "Palette deleted successfully!".to_string(),
-                                    toast_type: ToastType::Success,
-                                }),
+                                Some(Toast::success("Palette deleted successfully!".to_string())),
                             )
                     },
                     available_palettes,
@@ -159,11 +147,9 @@ fn App() -> Element {
                     if let Err(err) = storage::save(&palette) {
                         toast
                             .set(
-                                Some(Toast {
-                                    message: format!("Failed to save palette: {}", err),
-                                    toast_type: ToastType::Error,
-                                }),
+                                Some(Toast::error(format!("Failed to save palette: {}", err))),
                             );
+
                         return;
                     }
                     available_palettes.set(Palette::load_all());
@@ -172,10 +158,7 @@ fn App() -> Element {
                     if let Err(err) = storage::save(&palette) {
                         toast
                             .set(
-                                Some(Toast {
-                                    message: format!("Failed to save palette: {}", err),
-                                    toast_type: ToastType::Error,
-                                }),
+                                Some(Toast::error(format!("Failed to save palette: {}", err))),
                             );
                         return;
                     }
@@ -185,10 +168,7 @@ fn App() -> Element {
                     if let Err(err) = storage::delete(&id) {
                         toast
                             .set(
-                                Some(Toast {
-                                    message: format!("Failed to delete palette: {}", err),
-                                    toast_type: ToastType::Error,
-                                }),
+                                Some(Toast::error(format!("Failed to delete palette: {}", err))),
                             );
                         return;
                     }

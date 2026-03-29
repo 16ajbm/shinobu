@@ -15,6 +15,29 @@ pub struct Toast {
     pub toast_type: ToastType,
 }
 
+impl Toast {
+    pub fn error(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+            toast_type: ToastType::Error,
+        }
+    }
+
+    pub fn info(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+            toast_type: ToastType::Info,
+        }
+    }
+
+    pub fn success(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+            toast_type: ToastType::Success,
+        }
+    }
+}
+
 struct ToastStyles {
     bg_colour: &'static str,
     border_colour: &'static str,
