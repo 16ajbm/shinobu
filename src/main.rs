@@ -18,6 +18,7 @@ use crate::generator::create_plate;
 use crate::palette::{storage, Palette, PaletteId};
 
 static MAIN_CSS: Asset = asset!("/assets/styling.css");
+static PALETTE_ICON: Asset = asset!("/assets/palette-icon.svg");
 
 fn main() {
     dioxus::launch(App);
@@ -28,7 +29,7 @@ fn App() -> Element {
     // Initialize palettes
     let mut available_palettes = use_signal(Palette::load_all);
 
-    let mut show_palette_manager = use_signal(|| false);
+    let mut toggle_palette_manager = use_signal(|| false);
 
     // Create config signal and sync with persisted palettes
     let mut config = use_signal(|| {
@@ -111,10 +112,16 @@ fn App() -> Element {
 
             div { style: "flex: 1; position: relative; overflow: auto; background: #f0f0f0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;",
 
-                button {
-                    style: "position: absolute; top: 16px; right: 16px; z-index: 20;",
-                    onclick: move |_| show_palette_manager.set(true),
-                    "Palette Manager"
+                if !toggle_palette_manager() {
+                    button {
+                        style: "position: absolute; top: 16px; right: 16px; z-index: 20;",
+                        onclick: move |_| toggle_palette_manager.set(true),
+                        img {
+                            src: "{PALETTE_ICON}",
+                            width: "24",
+                            height: "24",
+                        }
+                    }
                 }
 
                 match svg_result() {
@@ -130,13 +137,13 @@ fn App() -> Element {
                 }
             }
 
-            if show_palette_manager() {
+            if toggle_palette_manager() {
                 PaletteManager {
                     palettes: available_palettes(),
                     is_open: true,
                     selected_primary_id: Some(config().primary.id.clone()),
                     selected_secondary_id: Some(config().secondary.id.clone()),
-                    on_close: move |_| show_palette_manager.set(false),
+                    on_close: move |_| toggle_palette_manager.set(false),
                     on_create: move |palette: Palette| {
                         if let Err(err) = storage::save(&palette) {
                             toast
