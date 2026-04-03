@@ -11,18 +11,15 @@ mod test_utils;
 
 use dioxus::prelude::*;
 
-use crate::components::toast::{Toast, ToastContainer, ToastType};
+use crate::components::toast::{Toast, ToastContainer};
 use crate::components::{
-    ControlPanel, ControlPanelProps, PaletteManager, PaletteManagerProps, PlatePreview,
+     ControlPanelProps, PaletteManagerProps,
     PlatePreviewProps, Root,
 };
 use crate::config::PlateConfig;
-use crate::generator::create_plate;
 use crate::palette::{storage, Palette, PaletteId};
 
 static MAIN_CSS: Asset = asset!("/assets/styling.css");
-static PALETTE_ICON: Asset = asset!("/assets/palette-icon.svg");
-static PLATE_ICON: Asset = asset!("/assets/plate-icon.svg");
 static SETTINGS_ICON: Asset = asset!("/assets/settings-icon.svg");
 
 fn main() {
