@@ -85,7 +85,3 @@ fn ControlPanelButton(control_panel_toggle: Signal<bool>) -> Element {
         }
     }
 }
-
-// Left side plate controls
-// Right side palette manager
-// center plate preview

@@ -29,11 +29,6 @@ fn main() {
     dioxus::launch(App);
 }
 
-// Root w/ children
-// 1. Left sidebar (ControlPanel)
-// 2. Main content (SVG plate)
-// 3. Palette Manager (modal)
-
 #[component]
 fn App() -> Element {
     // Initialize palettes
