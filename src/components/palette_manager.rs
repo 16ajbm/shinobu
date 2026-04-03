@@ -4,10 +4,11 @@ use crate::palette::{Palette, PaletteId};
 
 use super::PalettePreview;
 
+static X_ICON: Asset = asset!("/assets/x-icon.svg");
+
 #[derive(Props, PartialEq, Clone, Debug)]
 pub struct PaletteManagerProps {
     pub palettes: Vec<Palette>,
-    pub is_open: bool,
     pub selected_primary_id: Option<PaletteId>,
     pub selected_secondary_id: Option<PaletteId>,
 
@@ -40,10 +41,6 @@ pub fn PaletteManager(props: PaletteManagerProps) -> Element {
     let mut mode = use_signal(|| PaletteManagerState::Browse);
     let mut focused_palette_id = use_signal(|| None::<PaletteId>);
 
-    if !props.is_open {
-        return rsx!({});
-    }
-
     let detail_palette_id = focused_palette_id()
         .or_else(|| props.selected_primary_id)
         .or_else(|| props.selected_secondary_id);
@@ -65,13 +62,26 @@ pub fn PaletteManager(props: PaletteManagerProps) -> Element {
                 "aria-label": "Manage palettes",
                 onclick: move |event| event.stop_propagation(),
 
-                header {
+                header { position: "relative",
                     h2 { "Manage Palettes" }
-                    button {
-                        "aria-label": "Close palette manager",
-                        onclick: move |_| props.on_close.call(()),
-                        "Close"
+                    div {
+                        class: "close-button",
+                        position: "absolute",
+                        top: "8px",
+                        right: "8px",
+                        button {
+
+                            "aria-label": "Close palette manager",
+                            onclick: move |_| props.on_close.call(()),
+                            img {
+                                width: "16px",
+                                height: "16px",
+                                src: "{X_ICON}",
+                                alt: "Close",
+                            }
+                        }
                     }
+
                     button {
                         "aria-label": "Create new palette",
                         onclick: move |_| mode.set(PaletteManagerState::Create),

@@ -25,13 +25,12 @@ static PLATE_ICON: Asset = asset!("/assets/plate-icon.svg");
 
 #[component]
 pub fn Root(
+    mut control_panel_toggle: Signal<bool>,
+    mut palette_manager_toggle: Signal<bool>,
     control_panel_props: ControlPanelProps,
     palette_manager_props: PaletteManagerProps,
     plate_preview_props: PlatePreviewProps,
 ) -> Element {
-    let mut control_panel_toggle = use_signal(|| true);
-    let mut palette_manager_toggle = use_signal(|| true);
-
     rsx! {
         div { class: "root", display: "flex", flex_direction: "row",
             if control_panel_toggle() {
@@ -79,7 +78,7 @@ fn ControlPanelButton(control_panel_toggle: Signal<bool>) -> Element {
     rsx! {
         div { class: "control-panel-button",
             button {
-                style: "position: absolute; top: 16px; right: 16px; z-index: 20;",
+                style: "position: absolute; top: 16px; left: 16px; z-index: 20;",
                 onclick: move |_| control_panel_toggle.set(true),
                 img { src: "{PLATE_ICON}", width: "24", height: "24" }
             }

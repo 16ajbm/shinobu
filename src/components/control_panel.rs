@@ -5,9 +5,13 @@ use crate::components::toast::Toast;
 use crate::config::PlateConfig;
 use crate::palette::{Palette, PaletteId};
 
+static X_ICON: Asset = asset!("/assets/x-icon.svg");
+
+
 #[component]
 pub fn ControlPanel(
     mut config: Signal<PlateConfig>,
+    on_close: EventHandler<()>,
     on_save_palette: EventHandler<Palette>,
     _on_delete_palette: EventHandler<PaletteId>,
     available_palettes: Signal<Vec<Palette>>,
@@ -22,6 +26,23 @@ pub fn ControlPanel(
                 class: "red",
                 style: "font-size: clamp(22px, 2.5vw, 28px); margin-bottom: 16px;",
                 "Plate Controls"
+                div {
+                    class: "close-button",
+                    position: "absolute",
+                    top: "8px",
+                    left: "8px",
+                    button {
+
+                        "aria-label": "Close control panel",
+                        onclick: move |_| on_close.call(()),
+                        img {
+                            width: "16px",
+                            height: "16px",
+                            src: "{X_ICON}",
+                            alt: "Close",
+                        }
+                    }
+                }
             }
 
             ControlGroup { title: "Colour Palettes",
