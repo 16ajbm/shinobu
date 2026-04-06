@@ -7,7 +7,6 @@ use crate::palette::{Palette, PaletteId};
 
 static X_ICON: Asset = asset!("/assets/x-icon.svg");
 
-
 #[component]
 pub fn ControlPanel(
     mut config: Signal<PlateConfig>,
@@ -17,8 +16,6 @@ pub fn ControlPanel(
     available_palettes: Signal<Vec<Palette>>,
     toast: Signal<Option<Toast>>,
 ) -> Element {
-    let mut show_editor = use_signal(|| false);
-
     rsx! {
         aside { class: "control-panel",
 
@@ -42,21 +39,6 @@ pub fn ControlPanel(
                             alt: "Close",
                         }
                     }
-                }
-            }
-
-            ControlGroup { title: "Colour Palettes",
-                PaletteSelector {
-                    label: "Primary".to_string(),
-                    selected: config().primary,
-                    options: available_palettes,
-                    on_change: move |val| { config.with_mut(|c| c.primary = val) },
-                }
-                PaletteSelector {
-                    label: "Secondary (Edges)".to_string(),
-                    selected: config().secondary,
-                    options: available_palettes,
-                    on_change: move |val| { config.with_mut(|c| c.secondary = val) },
                 }
             }
 
@@ -89,21 +71,6 @@ pub fn ControlPanel(
                     on_change: move |val| { config.with_mut(|c| c.spacing_multiplier = val) },
                 }
             }
-            ControlGroup { title: "Manage Palettes",
-                button { onclick: move |_| show_editor.set(true), "Create Custom Palette" }
-            }
-
-            if show_editor() {
-                PaletteEditor {
-                    toast,
-                    on_save: move |palette| {
-                        on_save_palette.call(palette);
-                        show_editor.set(false);
-                    },
-                    on_cancel: move |_| show_editor.set(false),
-                }
-            }
-
         }
     }
 }

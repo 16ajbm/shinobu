@@ -12,10 +12,7 @@ mod test_utils;
 use dioxus::prelude::*;
 
 use crate::components::toast::{Toast, ToastContainer};
-use crate::components::{
-     ControlPanelProps, PaletteManagerProps,
-    PlatePreviewProps, Root,
-};
+use crate::components::{ControlPanelProps, PaletteManagerProps, PlatePreviewProps, Root};
 use crate::config::PlateConfig;
 use crate::palette::{storage, Palette, PaletteId};
 
@@ -92,6 +89,7 @@ fn App() -> Element {
     };
 
     let palette_manager_props = PaletteManagerProps {
+        toast,
         palettes: available_palettes(),
         selected_primary_id: Some(config().primary.id.clone()),
         selected_secondary_id: Some(config().secondary.id.clone()),
