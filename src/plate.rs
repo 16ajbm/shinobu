@@ -1,4 +1,3 @@
-
 use crate::config::PlateConfig;
 use crate::generator::{colour_source::ColourSource, point::Point};
 use crate::hex_colour::HexColour;

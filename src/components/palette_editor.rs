@@ -23,10 +23,7 @@ pub fn PaletteEditor(
 
     let handle_save = move |_| {
         if let Err(err) = Palette::validate_name(&name()) {
-            toast.set(Some(Toast {
-                message: err,
-                toast_type: ToastType::Error,
-            }));
+            toast.set(Some(Toast::error(err)));
             return;
         }
         on_save.call(Palette::custom(name(), colours()));

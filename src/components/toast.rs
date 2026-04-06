@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use std::time::Duration;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum ToastType {
     Success,
     Error,
@@ -9,10 +9,33 @@ pub enum ToastType {
     Info,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Toast {
     pub message: String,
     pub toast_type: ToastType,
+}
+
+impl Toast {
+    pub fn error(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+            toast_type: ToastType::Error,
+        }
+    }
+
+    pub fn info(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+            toast_type: ToastType::Info,
+        }
+    }
+
+    pub fn success(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+            toast_type: ToastType::Success,
+        }
+    }
 }
 
 struct ToastStyles {

@@ -16,8 +16,5 @@ target
 # Contains mutation testing data
 **/mutants.out*/
 
-# Ignore generated plates
-*.svg
-
 # Ignore saved palettes
 palettes/

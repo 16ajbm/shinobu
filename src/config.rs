@@ -2,7 +2,7 @@ use crate::palette::Palette;
 
 use crate::hex_colour::HexColour;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PlateConfig {
     pub dot_size: u32,
     pub width: u32,
