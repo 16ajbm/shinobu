@@ -6,7 +6,7 @@ An app for generating Ishihara plates.
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| Dioxus CLI | `0.6.3` | Build & serve the app |
+| Dioxus | `0.7.4` | Build & serve the app |
 | Rust | `1.93.0` | Language toolchain |
 
 ## Serving Your App
