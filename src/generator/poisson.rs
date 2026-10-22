@@ -1,28 +1,37 @@
-
+use crate::config::required_distance;
 use crate::generator::Point;
-
-type Sample = Point;
+use crate::generator::Sample;
 
 pub struct PoissonSampler {
     width: f32,
     height: f32,
-    radius: f32,
+    min_radius: u32,
+    max_radius: u32,
+    spacing_multiplier: f32,
     k: usize,
     cell_size: f32,
+    grid_search_range: isize,
     grid: Grid,
     sample_list: Vec<Sample>,
     active_list: Vec<SampleIndex>,
 }
 
-type Grid = Vec<Vec<SampleIndex>>;
+type Grid = Vec<Vec<Vec<SampleIndex>>>;
 
 type SampleIndex = i32;
 
-const NO_SAMPLE: SampleIndex = -1;
-
 impl PoissonSampler {
-    pub fn new(width: f32, height: f32, radius: f32, k: usize) -> Self {
-        let cell_size = radius / (2.0f32).sqrt();
+    pub fn new(
+        width: f32,
+        height: f32,
+        min_radius: u32,
+        max_radius: u32,
+        spacing_multiplier: f32,
+        k: usize,
+    ) -> Self {
+        let maximum_interaction_distance = 2.0 * max_radius as f32 * spacing_multiplier;
+        let cell_size = maximum_interaction_distance / (2.0f32).sqrt();
+        let grid_search_range = (maximum_interaction_distance / cell_size).ceil() as isize;
         let grid = Self::create_grid(width, height, cell_size);
         let sample_list = Vec::new();
         let active_list = Vec::new();
@@ -30,9 +39,12 @@ impl PoissonSampler {
         Self {
             width,
             height,
-            radius,
+            min_radius,
+            max_radius,
+            spacing_multiplier,
             k,
             cell_size,
+            grid_search_range,
             grid,
             sample_list,
             active_list,
@@ -42,7 +54,7 @@ impl PoissonSampler {
     fn create_grid(width: f32, height: f32, cell_size: f32) -> Grid {
         let grid_width = (width / cell_size).ceil() as usize;
         let grid_height = (height / cell_size).ceil() as usize;
-        vec![vec![NO_SAMPLE; grid_height]; grid_width]
+        vec![vec![Vec::new(); grid_height]; grid_width]
     }
 
     pub fn generate_samples(&mut self) -> Vec<Sample> {
@@ -79,29 +91,41 @@ impl PoissonSampler {
     }
 
     fn insert_sample_into_grid(&mut self, sample: &Sample, index: i32) {
-        let grid_x = (sample.x / self.cell_size).floor() as usize;
-        let grid_y = (sample.y / self.cell_size).floor() as usize;
-        self.grid[grid_x][grid_y] = index;
+        let grid_x = (sample.position.x / self.cell_size).floor() as usize;
+        let grid_y = (sample.position.y / self.cell_size).floor() as usize;
+        self.grid[grid_x][grid_y].push(index);
     }
 
     fn generate_initial_sample(&self) -> Sample {
         let x = rand::random::<f32>() * self.width;
         let y = rand::random::<f32>() * self.height;
-        Sample { x, y }
+        let dot_radius = rand::random_range(self.min_radius..=self.max_radius);
+        Sample {
+            position: Point { x, y },
+            radius: dot_radius,
+        }
     }
 
     fn generate_point_in_annulus(&self, sample: &Sample) -> Sample {
-        let r1 = self.radius;
-        let r2 = 2.0 * self.radius;
-        let radius = ((rand::random::<f32>() * (r2 * r2 - r1 * r1)) + r1 * r1).sqrt();
+        let dot_radius = rand::random_range(self.min_radius..=self.max_radius);
+        let minimum_distance =
+            required_distance(sample.radius, dot_radius, self.spacing_multiplier);
+        let maximum_distance = 2.0 * minimum_distance;
+        let distance = rand::random_range(minimum_distance..=maximum_distance);
         let angle = rand::random::<f32>() * 2.0 * std::f32::consts::PI;
-        let x = sample.x + radius * angle.cos();
-        let y = sample.y + radius * angle.sin();
-        Sample { x, y }
+        let x = sample.position.x + distance * angle.cos();
+        let y = sample.position.y + distance * angle.sin();
+        Sample {
+            position: Point { x, y },
+            radius: dot_radius,
+        }
     }
 
     fn is_in_bounds(&self, sample: &Sample) -> bool {
-        sample.x >= 0.0 && sample.x < self.width && sample.y >= 0.0 && sample.y < self.height
+        sample.position.x >= 0.0
+            && sample.position.x < self.width
+            && sample.position.y >= 0.0
+            && sample.position.y < self.height
     }
 
     fn is_valid_sample(&self, sample: &Sample) -> bool {
@@ -111,7 +135,9 @@ impl PoissonSampler {
 
         let nearby_samples = self.get_nearby_samples(sample);
         for neighbor in nearby_samples {
-            if Self::distance(sample, neighbor) < self.radius {
+            let minimum_distance =
+                required_distance(sample.radius, neighbor.radius, self.spacing_multiplier);
+            if Self::distance(sample, neighbor) < minimum_distance {
                 return false;
             }
         }
@@ -121,11 +147,11 @@ impl PoissonSampler {
 
     fn get_nearby_samples(&self, sample: &Sample) -> Vec<&Sample> {
         let mut nearby_samples = Vec::new();
-        let grid_x = (sample.x / self.cell_size).floor() as isize;
-        let grid_y = (sample.y / self.cell_size).floor() as isize;
+        let grid_x = (sample.position.x / self.cell_size).floor() as isize;
+        let grid_y = (sample.position.y / self.cell_size).floor() as isize;
 
-        for i in -2..=2 {
-            for j in -2..=2 {
+        for i in -self.grid_search_range..=self.grid_search_range {
+            for j in -self.grid_search_range..=self.grid_search_range {
                 let neighbor_x = grid_x + i;
                 let neighbor_y = grid_y + j;
 
@@ -134,8 +160,7 @@ impl PoissonSampler {
                     && (neighbor_x as usize) < self.grid.len()
                     && (neighbor_y as usize) < self.grid[0].len()
                 {
-                    let sample_index = self.grid[neighbor_x as usize][neighbor_y as usize];
-                    if sample_index != NO_SAMPLE {
+                    for &sample_index in &self.grid[neighbor_x as usize][neighbor_y as usize] {
                         nearby_samples.push(&self.sample_list[sample_index as usize]);
                     }
                 }
@@ -146,7 +171,7 @@ impl PoissonSampler {
     }
 
     fn distance(a: &Sample, b: &Sample) -> f32 {
-        ((a.x - b.x).powi(2) + (a.y - b.y).powi(2)).sqrt()
+        ((a.position.x - b.position.x).powi(2) + (a.position.y - b.position.y).powi(2)).sqrt()
     }
 }
 
@@ -169,7 +194,7 @@ mod tests {
 
     #[test]
     fn test_minimum_distance_invariant() {
-        let mut sampler = PoissonSampler::new(100.0, 100.0, 5.0, 30);
+        let mut sampler = PoissonSampler::new(100.0, 100.0, 3, 10, 1.0, 30);
         let samples = sampler.generate_samples();
 
         for i in 0..samples.len() {
@@ -190,17 +215,17 @@ mod tests {
         let width = 100.0;
         let height = 100.0;
 
-        let mut sampler = PoissonSampler::new(width, height, 5.0, 30);
+        let mut sampler = PoissonSampler::new(width, height, 3, 10, 1.0, 30);
         let samples = sampler.generate_samples();
 
         for (i, sample) in samples.iter().enumerate() {
             assert!(
-                sample.x >= 0.0 && sample.x < width,
+                sample.position.x >= 0.0 && sample.position.x < width,
                 "Sample {} x out of bounds",
                 i
             );
             assert!(
-                sample.y >= 0.0 && sample.y < height,
+                sample.position.y >= 0.0 && sample.position.y < height,
                 "Sample {} y out of bounds",
                 i
             );
@@ -209,20 +234,29 @@ mod tests {
 
     #[test]
     fn test_generates_at_least_one_sample() {
-        let mut sampler = PoissonSampler::new(100.0, 100.0, 5.0, 30);
+        let mut sampler = PoissonSampler::new(100.0, 100.0, 3, 10, 1.0, 30);
         let samples = sampler.generate_samples();
         assert!(!samples.is_empty(), "No samples generated");
     }
 
     #[test]
     fn test_annulus_generation() {
-        let sampler = PoissonSampler::new(100.0, 100.0, 5.0, 30);
-        let center = Sample { x: 50.0, y: 50.0 };
+        let sampler = PoissonSampler::new(100.0, 100.0, 3, 10, 1.0, 30);
+        let center = Sample {
+            position: Point { x: 50.0, y: 50.0 },
+            radius: 5,
+        };
 
         for _ in 0..100 {
             let sample = sampler.generate_point_in_annulus(&center);
             let dist = PoissonSampler::distance(&center, &sample);
-            assert_in_range(dist, 5.0, 10.0, "Annulus distance");
+            let minimum_distance = center.radius as f32 + sample.radius as f32;
+            assert_in_range(
+                dist,
+                minimum_distance,
+                2.0 * minimum_distance,
+                "Annulus distance",
+            );
         }
     }
 }

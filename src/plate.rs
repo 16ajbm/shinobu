@@ -1,5 +1,5 @@
-
 use crate::config::PlateConfig;
+use crate::generator::sample::Sample;
 use crate::generator::{colour_source::ColourSource, point::Point};
 use crate::hex_colour::HexColour;
 
@@ -27,17 +27,21 @@ impl Plate {
     }
 
     pub fn from_points(
-        points: Vec<Point>,
+        points: Vec<Sample>,
         config: PlateConfig,
         colour_source: &dyn ColourSource,
     ) -> Self {
         let dots = points
             .into_iter()
             .map(|point| {
-                let size = config.random_dot_size();
+                let size = point.radius;
                 Dot {
-                    colour: colour_source.sample_colour(point.x, point.y, size as f32),
-                    position: point,
+                    colour: colour_source.sample_colour(
+                        point.position.x,
+                        point.position.y,
+                        size as f32,
+                    ),
+                    position: point.position,
                     size,
                 }
             })
@@ -88,8 +92,9 @@ impl Plate {
     /// Check if a dot of given size can be placed at position without overlap.
     fn can_place_dot_at(&self, position: &Point, new_dot_radius: u32) -> bool {
         self.dots.iter().all(|existing_dot| {
-            let min_distance =
-                (new_dot_radius + existing_dot.size) as f32 * self.config.spacing_multiplier;
+            let min_distance = self
+                .config
+                .required_distance(new_dot_radius, existing_dot.size);
             let distance = Self::distance(&existing_dot.position, position);
             distance >= min_distance
         })
