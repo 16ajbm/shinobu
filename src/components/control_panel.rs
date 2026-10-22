@@ -61,10 +61,12 @@ pub fn ControlPanel(
 
             ControlGroup { title: "Spacing",
                 SliderControl {
-                    label: "Multiplier",
+                    label: "Spacing",
                     value: config().spacing_multiplier,
-                    min: 0.5,
-                    max: 2.0,
+                    min: 1.0,
+                    max: 1.5,
+                    step: 0.05,
+                    precision: 2,
                     on_change: move |val| { config.with_mut(|c| c.spacing_multiplier = val) },
                 }
             }

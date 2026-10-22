@@ -2,12 +2,14 @@ pub mod colour_source;
 pub mod painter;
 pub mod point;
 pub mod poisson;
+pub mod sample;
 
 use crate::generator::colour_source::EdgeBasedColourSource;
 use crate::image_processor::ImageBuffer;
 use crate::palette::Palette;
 
 pub use self::point::Point;
+pub use self::sample::Sample;
 use crate::config::PlateConfig;
 use crate::hex_colour::HexColour;
 use crate::plate::{Dot, Plate};
@@ -36,7 +38,7 @@ impl Generator {
 
     pub fn generate_from_edges(
         &self,
-        points: Vec<Point>,
+        points: Vec<Sample>,
         edge_map: &ImageBuffer<u8>,
         config: PlateConfig,
     ) -> Plate {
@@ -53,7 +55,7 @@ impl Generator {
 
     pub fn generate_and_paint(
         &self,
-        points: Vec<Point>,
+        points: Vec<Sample>,
         edge_map: &ImageBuffer<u8>,
         config: PlateConfig,
     ) -> String {
@@ -88,8 +90,10 @@ pub fn create_plate(
     let mut sampler = PoissonSampler::new(
         edge_map.width as f32,
         edge_map.height as f32,
-        config.poisson_radius(),
-        30,
+        config.dot_radius_bounds().0,
+        config.dot_radius_bounds().1,
+        config.spacing_multiplier(),
+        30, // k value for Poisson sampling
     );
     let points = sampler.generate_samples();
 

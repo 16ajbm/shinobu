@@ -53,6 +53,12 @@ body {
     color: var(--primary-dark);
 }
 
+.control-group-contents {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
 .slider-control {
     display: flex;
     flex-direction: column;

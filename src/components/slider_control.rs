@@ -11,7 +11,7 @@ pub fn SliderControl(
     #[props(default = 2)] precision: usize,
 ) -> Element {
     rsx! {
-        div { class: "slider-control", style: "margin-bottom: 16px;",
+        div { class: "slider-control",
             label {
                 class: "slider-label",
                 style: "display: block; margin-bottom: 8px; font-weight: 500; font-size: inherit;",
